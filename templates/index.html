@@ -86,25 +86,33 @@
     const mic = document.getElementById("mic");
 
     form.addEventListener("submit", async event => {
-        event.preventDefault();
+    event.preventDefault();
 
-        const data = new FormData(form);
+    const newTab = window.open("about:blank", "_blank");
 
-        const response = await fetch("/", {
-            method: "POST",
-            body: data
-        });
+    const data = new FormData(form);
 
-        const answer = await response.json();
-
-        if (answer.type === "url") {
-            window.open(answer.url, "_blank");
-        }
-
-        if (answer.type === "result") {
-            result.textContent = answer.text;
-        }
+    const response = await fetch("/", {
+        method: "POST",
+        body: data
     });
+
+    const answer = await response.json();
+
+    if (answer.type === "url") {
+        if (newTab) {
+            newTab.location.href = answer.url;
+        }
+    }
+
+    if (answer.type === "result") {
+        if (newTab) {
+            newTab.close();
+        }
+
+        result.textContent = answer.text;
+    }
+});
 
 
     const SpeechRecognition =
