@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Master Lock</title>
+
+    <style>
+        body {
+            background: black;
+            color: white;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        input {
+            width: 600px;
+            max-width: 70vw;
+            padding: 15px;
+            background: #111;
+            color: white;
+            border: 2px solid #333;
+            outline: none;
+            font-size: 20px;
+        }
+
+        input:focus {
+            border-color: #777;
+        }
+
+        button {
+            padding: 15px 20px;
+            margin-left: 8px;
+            background: #222;
+            color: white;
+            border: 2px solid #333;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #333;
+        }
+
+        .result {
+            margin-top: 30px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <form id="commandForm">
+
+        <input
+            id="code"
+            name="code"
+            placeholder="Enter command..."
+            autofocus
+            autocomplete="off"
+        >
+
+        <button type="submit">Go</button>
+
+        <button type="button" id="mic">Mic</button>
+
+    </form>
+
+    <div id="result" class="result"></div>
+
+</div>
+
+<script>
+    const form = document.getElementById("commandForm");
+    const input = document.getElementById("code");
+    const result = document.getElementById("result");
+    const mic = document.getElementById("mic");
+
+    form.addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const data = new FormData(form);
+
+        const response = await fetch("/", {
+            method: "POST",
+            body: data
+        });
+
+        const answer = await response.json();
+
+        if (answer.type === "url") {
+            window.open(answer.url, "_blank");
+        }
+
+        if (answer.type === "result") {
+            result.textContent = answer.text;
+        }
+    });
+
+
+    const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+
+        const recognition = new SpeechRecognition();
+
+        recognition.lang = "en-GB";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        mic.addEventListener("click", () => {
+            recognition.start();
+            mic.textContent = "Listening...";
+        });
+
+        recognition.addEventListener("result", event => {
+            input.value = event.results[0][0].transcript;
+        });
+
+        recognition.addEventListener("end", () => {
+            mic.textContent = "Mic";
+        });
+
+        recognition.addEventListener("error", event => {
+            console.log("Speech recognition error:", event.error);
+            mic.textContent = "Mic";
+        });
+
+    } else {
+
+        mic.disabled = true;
+        mic.textContent = "No mic";
+
+    }
+</script>
+
+</body>
+</html>
