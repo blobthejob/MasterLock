@@ -88,8 +88,6 @@
     form.addEventListener("submit", async event => {
     event.preventDefault();
 
-    const newTab = window.open("about:blank", "_blank");
-
     const data = new FormData(form);
 
     const response = await fetch("/", {
@@ -100,16 +98,10 @@
     const answer = await response.json();
 
     if (answer.type === "url") {
-        if (newTab) {
-            newTab.location.href = answer.url;
-        }
+        window.location.href = answer.url;
     }
 
     if (answer.type === "result") {
-        if (newTab) {
-            newTab.close();
-        }
-
         result.textContent = answer.text;
     }
 });
