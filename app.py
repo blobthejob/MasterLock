@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
 import re
+import json
 COLOURS = {
     "black": "black",
     "white": "white",
@@ -26,6 +27,20 @@ def get_colour(value):
 app = Flask(__name__)
 
 UNLOCK_CODE = "everybody wants to rule the world"
+RESET_CODE = "reset puzzle"
+CODES = {
+
+    "nos ossos que aqui estamos pelos vossos esperamos": {
+        "text": "You've found the first clue:\n\nWhere you now stand, seek words of Latin stone\nUpon this place, a secret waits alone\nLook up and find the message carved in bone\nAnd speak its meaning once the words are known",
+        "unlocks": ["melior est dies mortis die nativitatis"]
+    },
+
+    "melior est dies mortis die nativitatis":{
+        "text":"Sub palmā viridis fōns dēserta per arva clāret,\nFrīgida vallis habet dulcem relevāta ardōrem;\nMurmure dulcī aqua per saxa serēna sonāret,\nHīc viātor bibit et relinquit errorem.",
+        "unlocks": []
+    }
+}
+START_UNLOCKED = ["nos ossos que aqui estamos pelos vossos esperamos"]
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -33,16 +48,23 @@ def home():
     if request.method == "POST":
 
         original = request.form["code"].strip()
-        code = original.lower()
+        code = original.lower().replace(",", "").replace(".", "").replace("'","")
 
-        if code == "operation shitstorm":
+        locked = request.form.get("locked") == "true"
+
+        if locked and code == RESET_CODE.lower():
             return jsonify({
-                "type": "lock"
+                "type": "reset"
             })
-        
-        elif code == UNLOCK_CODE.lower():
+
+        elif locked and code == UNLOCK_CODE.lower():
             return jsonify({
                 "type": "unlock"
+            })
+
+        elif code == "operation shitstorm":
+            return jsonify({
+                "type": "lock"
             })
 
         elif code == "hello":
@@ -50,8 +72,7 @@ def home():
                 "type": "result",
                 "text": "Hello!"
             })
-
-
+        
         elif code == "no one in the world ever gets what they want and that is beautiful":
             return jsonify({
                 "type": "decrypt",
@@ -62,6 +83,23 @@ def home():
             return jsonify({
                 "type": "result",
                 "text": "Jenny, Jenny, here's my number:\n+447935307551\nNow I just need to make you mine..."
+            })
+        
+        elif code in CODES:
+            unlocked = request.form.get("unlocked", "[]")
+            unlocked = json.loads(unlocked)
+
+            if code not in unlocked:
+                search = original
+                return jsonify({
+                    "type": "url",
+                    "url": "https://www.google.com/search?q=" + quote(search)
+                })
+
+            return jsonify({
+                "type": "code",
+                "text": CODES[code]["text"],
+                "unlocks": CODES[code]["unlocks"]
             })
 
         elif code.startswith("yt "):
@@ -90,7 +128,6 @@ def home():
 
         elif code.startswith("g "):
             search = original[2:]
-
             return jsonify({
                 "type": "url",
                 "url": "https://www.google.com/search?q=" + quote(search)

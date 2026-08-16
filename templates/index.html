@@ -135,6 +135,23 @@ const savedBg = localStorage.getItem("master_bg");
 const savedText = localStorage.getItem("master_text");
 const savedBtn = localStorage.getItem("master_btn");
 const savedInput = localStorage.getItem("master_input");
+let unlockedCodes = JSON.parse(
+    localStorage.getItem("masterUnlocked") || "[]"
+);
+const startingCodes = [
+    "nos ossos que aqui estamos pelos vossos esperamos"
+];
+startingCodes.forEach(code => {
+    if (!unlockedCodes.includes(code)) {
+        unlockedCodes.push(code);
+    }
+
+});
+
+localStorage.setItem(
+    "masterUnlocked",
+    JSON.stringify(unlockedCodes)
+);
 
 if (savedBg) {
     document.body.style.backgroundColor = savedBg;
@@ -193,19 +210,24 @@ form.addEventListener("submit", async event => {
     event.preventDefault();
 
     result.textContent = "";
-    input.value = "";
+
+    const enteredCode = input.value.trim().toLowerCase();
 
     const data = new FormData(form);
 
-    const response = await fetch("/", {
-        method: "POST",
-        body: data
-    });
+data.append(
+    "unlocked",
+    JSON.stringify(unlockedCodes)
+);
+
+const response = await fetch("/", {
+    method: "POST",
+    body: data
+});
 
     const answer = await response.json();
 
     input.value = "";
-
     if (answer.type === "lock") {
         showLocked();
         return;
@@ -252,6 +274,25 @@ form.addEventListener("submit", async event => {
     if (answer.type === "result") {
         result.textContent = answer.text;
     }
+if (answer.type === "code") {
+
+    result.textContent = answer.text;
+
+    answer.unlocks.forEach(code => {
+
+        if (!unlockedCodes.includes(code)) {
+            unlockedCodes.push(code);
+        }
+
+    });
+
+    localStorage.setItem(
+        "masterUnlocked",
+        JSON.stringify(unlockedCodes)
+    );
+
+    return;
+}
 
 if (answer.type === "decrypt") {
 
@@ -298,7 +339,7 @@ if (answer.type === "decrypt") {
 
 unlockButton.addEventListener("click", async () => {
 
-    const code = unlockCode.value.trim();
+    const code = unlockCode.value.trim().toLowerCase();
 
     if (!code) {
         return;
@@ -307,6 +348,7 @@ unlockButton.addEventListener("click", async () => {
     const data = new FormData();
 
     data.append("code", code);
+    data.append("locked", "true");
 
     const response = await fetch("/", {
         method: "POST",
@@ -315,21 +357,31 @@ unlockButton.addEventListener("click", async () => {
 
     const answer = await response.json();
 
+    if (answer.type === "reset") {
+
+        localStorage.removeItem("masterUnlocked");
+
+        location.reload();
+
+        return;
+    }
+
     if (answer.type === "unlock") {
+
         lockResult.textContent = "UNLOCKED";
 
         setTimeout(() => {
             showNormal();
         }, 500);
 
-    } else {
-        lockResult.textContent = "INCORRECT CODE";
-        unlockCode.value = "";
-        unlockCode.focus();
+        return;
     }
 
-});
+    lockResult.textContent = "INCORRECT CODE";
+    unlockCode.value = "";
+    unlockCode.focus();
 
+});
 
 unlockCode.addEventListener("keydown", event => {
 
