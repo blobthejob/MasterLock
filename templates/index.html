@@ -188,6 +188,45 @@ form.addEventListener("submit", async event => {
     if (answer.type === "result") {
         result.textContent = answer.text;
     }
+if (answer.type === "decrypt") {
+
+    const text = answer.text;
+
+    const characters =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+
+    let position = 0;
+
+    result.textContent = "";
+
+    const interval = setInterval(() => {
+
+        let display = "";
+
+        for (let i = 0; i < text.length; i++) {
+
+            if (i < position) {
+                display += text[i];
+            } else if (text[i] === " ") {
+                display += " ";
+            } else {
+                display += characters[
+                    Math.floor(Math.random() * characters.length)
+                ];
+            }
+        }
+
+        result.textContent = display;
+
+        position++;
+
+        if (position > text.length) {
+            clearInterval(interval);
+            result.textContent = text;
+        }
+
+    }, 50);
+}
 
 });
 

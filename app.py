@@ -25,7 +25,7 @@ def home():
 
         elif code == "hello":
             return jsonify({
-                "type": "result",
+                "type": "decrypt",
                 "text": "Hello!"
             })
 
