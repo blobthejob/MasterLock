@@ -52,6 +52,20 @@
             margin-top: 30px;
             font-size: 24px;
         }
+
+        #lockedScreen {
+            display: none;
+            text-align: center;
+        }
+
+        #lockedScreen input {
+            display: block;
+            margin: 25px auto;
+        }
+
+        #lockedScreen button {
+            margin-left: 0;
+        }
     </style>
 </head>
 
@@ -59,112 +73,223 @@
 
 <div class="container">
 
-    <form id="commandForm">
+    <div id="normalScreen">
+
+        <form id="commandForm">
+
+            <input
+                id="code"
+                name="code"
+                placeholder="Enter command..."
+                autofocus
+                autocomplete="off"
+            >
+
+            <button type="submit">Go</button>
+
+            <button type="button" id="mic">Listen</button>
+
+        </form>
+
+        <div id="result" class="result"></div>
+
+    </div>
+
+
+    <div id="lockedScreen">
+
+        <h1>MASTER LOCK</h1>
+
+        <h2>LOCKED</h2>
 
         <input
-            id="code"
-            name="code"
-            placeholder="Enter command..."
-            autofocus
+            id="unlockCode"
+            placeholder="Enter unlock code..."
             autocomplete="off"
         >
 
-        <button type="submit">Go</button>
+        <button id="unlockButton">UNLOCK</button>
 
-        <button type="button" id="mic">Listen</button>
+        <div id="lockResult" class="result"></div>
 
-    </form>
-
-    <div id="result" class="result"></div>
+    </div>
 
 </div>
 
+
 <script>
-    const form = document.getElementById("commandForm");
-    const input = document.getElementById("code");
-    const result = document.getElementById("result");
-    const mic = document.getElementById("mic");
 
-    form.addEventListener("submit", async event => {
-        event.preventDefault();
+const form = document.getElementById("commandForm");
+const input = document.getElementById("code");
+const result = document.getElementById("result");
+const mic = document.getElementById("mic");
 
-        const data = new FormData(form);
+const normalScreen = document.getElementById("normalScreen");
+const lockedScreen = document.getElementById("lockedScreen");
 
-        const response = await fetch("/", {
-            method: "POST",
-            body: data
-        });
+const unlockCode = document.getElementById("unlockCode");
+const unlockButton = document.getElementById("unlockButton");
+const lockResult = document.getElementById("lockResult");
 
-        const answer = await response.json();
 
-        input.value = "";
+function showLocked() {
 
-        if (answer.type === "url") {
-            window.location.href = answer.url;
-        }
+    localStorage.setItem("masterLockLocked", "true");
 
-        if (answer.type === "result") {
-            result.textContent = answer.text;
-        }
+    normalScreen.style.display = "none";
+    lockedScreen.style.display = "block";
+
+    unlockCode.focus();
+}
+
+
+function showNormal() {
+
+    localStorage.removeItem("masterLockLocked");
+
+    lockedScreen.style.display = "none";
+    normalScreen.style.display = "block";
+
+    input.value = "";
+    input.focus();
+}
+
+
+if (localStorage.getItem("masterLockLocked") === "true") {
+    showLocked();
+}
+
+
+form.addEventListener("submit", async event => {
+
+    event.preventDefault();
+
+    const data = new FormData(form);
+
+    const response = await fetch("/", {
+        method: "POST",
+        body: data
     });
 
+    const answer = await response.json();
 
-    const SpeechRecognition =
-        window.SpeechRecognition ||
-        window.webkitSpeechRecognition;
+    input.value = "";
 
-    let listening = false;
-    let recognition;
+    if (answer.type === "lock") {
+        showLocked();
+        return;
+    }
 
-    if (SpeechRecognition) {
+    if (answer.type === "url") {
+        window.location.href = answer.url;
+        return;
+    }
 
-        recognition = new SpeechRecognition();
+    if (answer.type === "result") {
+        result.textContent = answer.text;
+    }
 
-        recognition.lang = "en-GB";
-        recognition.continuous = true;
-        recognition.interimResults = false;
+});
 
-        mic.addEventListener("click", () => {
 
-            if (listening) {
-                recognition.stop();
-                return;
-            }
+unlockButton.addEventListener("click", async () => {
 
-            recognition.start();
+    const code = unlockCode.value.trim();
 
-        });
+    if (!code) {
+        return;
+    }
 
-        recognition.addEventListener("start", () => {
-            listening = true;
-            mic.textContent = "Listening...";
-        });
+    const data = new FormData();
 
-        recognition.addEventListener("result", event => {
-            const text =
-                event.results[event.results.length - 1][0].transcript;
+    data.append("code", code);
 
-            input.value = text;
-        });
+    const response = await fetch("/", {
+        method: "POST",
+        body: data
+    });
 
-        recognition.addEventListener("end", () => {
-            listening = false;
-            mic.textContent = "Listen";
-        });
+    const answer = await response.json();
 
-        recognition.addEventListener("error", event => {
-            console.log("Speech recognition error:", event.error);
+    if (answer.type === "unlock") {
+        lockResult.textContent = "UNLOCKED";
 
-            listening = false;
-            mic.textContent = "Listen";
-        });
+        setTimeout(() => {
+            showNormal();
+        }, 500);
 
     } else {
-
-        mic.disabled = true;
-        mic.textContent = "No mic";
-
+        lockResult.textContent = "INCORRECT CODE";
+        unlockCode.value = "";
+        unlockCode.focus();
     }
+
+});
+
+
+unlockCode.addEventListener("keydown", event => {
+
+    if (event.key === "Enter") {
+        unlockButton.click();
+    }
+
+});
+
+
+const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+let listening = false;
+let recognition;
+
+if (SpeechRecognition) {
+
+    recognition = new SpeechRecognition();
+
+    recognition.lang = "en-GB";
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    mic.addEventListener("click", () => {
+
+        if (listening) {
+            recognition.stop();
+            return;
+        }
+
+        recognition.start();
+
+    });
+
+    recognition.addEventListener("start", () => {
+        listening = true;
+        mic.textContent = "Listening...";
+    });
+
+    recognition.addEventListener("result", event => {
+
+        const text =
+            event.results[event.results.length - 1][0].transcript;
+
+        input.value = text;
+
+    });
+
+    recognition.addEventListener("end", () => {
+
+        listening = false;
+        mic.textContent = "Listen";
+
+    });
+
+} else {
+
+    mic.disabled = true;
+    mic.textContent = "No mic";
+
+}
+
 </script>
 
 </body>

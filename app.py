@@ -3,6 +3,8 @@ from urllib.parse import quote
 
 app = Flask(__name__)
 
+UNLOCK_CODE = "everybody wants to rule the world"
+
 @app.route("/", methods=["GET", "POST"])
 def home():
 
@@ -11,18 +13,30 @@ def home():
         original = request.form["code"].strip()
         code = original.lower()
 
-        if code == "hello":
+        if code == "operation shitstorm":
+            return jsonify({
+                "type": "lock"
+            })
+        
+        elif code == UNLOCK_CODE.lower():
+            return jsonify({
+                "type": "unlock"
+            })
+
+        elif code == "hello":
             return jsonify({
                 "type": "result",
                 "text": "Hello!"
             })
+
+
         elif code == "no one in the world ever gets what they want and that is beautiful":
             return jsonify({
                 "type": "result",
                 "text": "CODE ACCEPTED"
             })
 
-        elif code == "867 5309":
+        elif "867" in code and "5309" in code:
             return jsonify({
                 "type": "result",
                 "text": "CODE ACCEPTED"
@@ -30,46 +44,40 @@ def home():
 
         elif code.startswith("yt "):
             search = original[3:]
-            url = "https://www.youtube.com/results?search_query=" + quote(search)
 
             return jsonify({
                 "type": "url",
-                "url": url
+                "url": "https://www.youtube.com/results?search_query=" + quote(search)
             })
 
         elif code.startswith("youtube "):
             search = original[8:]
-            url = "https://www.youtube.com/results?search_query=" + quote(search)
 
             return jsonify({
                 "type": "url",
-                "url": url
+                "url": "https://www.youtube.com/results?search_query=" + quote(search)
             })
 
         elif code.startswith("wiki "):
             search = original[5:]
-            url = "https://en.wikipedia.org/wiki/Special:Search?search=" + quote(search)
 
             return jsonify({
                 "type": "url",
-                "url": url
+                "url": "https://en.wikipedia.org/wiki/Special:Search?search=" + quote(search)
             })
 
         elif code.startswith("g "):
             search = original[2:]
-            url = "https://www.google.com/search?q=" + quote(search)
 
             return jsonify({
                 "type": "url",
-                "url": url
+                "url": "https://www.google.com/search?q=" + quote(search)
             })
 
         else:
-            url = "https://www.google.com/search?q=" + quote(original)
-
             return jsonify({
                 "type": "url",
-                "url": url
+                "url": "https://www.google.com/search?q=" + quote(original)
             })
 
     return render_template("index.html")
