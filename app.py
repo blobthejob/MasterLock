@@ -1,5 +1,27 @@
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
+import re
+COLOURS = {
+    "black": "black",
+    "white": "white",
+    "red": "red",
+    "green": "green",
+    "blue": "blue",
+    "yellow": "yellow",
+    "purple": "purple",
+    "pink": "pink",
+    "orange": "orange",
+    "gray": "gray",
+    "grey": "gray"
+}
+
+def get_colour(value):
+    value = value.strip().lower()
+    if value in COLOURS:
+        return COLOURS[value]
+    if re.fullmatch(r"#[0-9a-fA-F]{6}", value):
+        return value
+    return None
 
 app = Flask(__name__)
 
@@ -25,21 +47,21 @@ def home():
 
         elif code == "hello":
             return jsonify({
-                "type": "decrypt",
+                "type": "result",
                 "text": "Hello!"
             })
 
 
         elif code == "no one in the world ever gets what they want and that is beautiful":
             return jsonify({
-                "type": "result",
-                "text": "CODE ACCEPTED"
+                "type": "decrypt",
+                "text": "everybody dies frustrated and sad\nbut that is beautiful"
             })
 
         elif "867" in code and "5309" in code:
             return jsonify({
                 "type": "result",
-                "text": "CODE ACCEPTED"
+                "text": "Jenny, Jenny, here's my number:\n+447935307551\nNow I just need to make you mine..."
             })
 
         elif code.startswith("yt "):
@@ -72,6 +94,61 @@ def home():
             return jsonify({
                 "type": "url",
                 "url": "https://www.google.com/search?q=" + quote(search)
+            })
+        elif code.startswith("bg "):
+            colour = get_colour(original[3:])
+            if colour:
+                return jsonify({
+                    "type": "css",
+                    "target": "bg",
+                    "value": colour
+                })
+            return jsonify({
+                "type": "result",
+                "text": "Invalid background colour."
+            })
+
+
+        elif code.startswith("text "):
+            colour = get_colour(original[5:])
+            if colour:
+                return jsonify({
+                    "type": "css",
+                    "target": "text",
+                    "value": colour
+                })
+            return jsonify({
+                "type": "result",
+                "text": "Invalid text colour."
+            })
+        
+        elif code.startswith("btn "):
+            colour = get_colour(original[4:])
+            if colour:
+                return jsonify({
+                    "type": "css",
+                    "target": "btn",
+                    "value": colour
+                })
+
+            return jsonify({
+                "type": "result",
+                "text": "Invalid button colour."
+            })
+
+
+        elif code.startswith("input "):
+            colour = get_colour(original[6:])
+            if colour:
+                return jsonify({
+                    "type": "css",
+                    "target": "input",
+                    "value": colour
+                })
+
+            return jsonify({
+                "type": "result",
+                "text": "Invalid input colour."
             })
 
         else:

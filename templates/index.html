@@ -51,6 +51,7 @@
         .result {
             margin-top: 30px;
             font-size: 24px;
+    	    white-space: pre-line;
         }
 
         #lockedScreen {
@@ -130,7 +131,34 @@ const lockedScreen = document.getElementById("lockedScreen");
 const unlockCode = document.getElementById("unlockCode");
 const unlockButton = document.getElementById("unlockButton");
 const lockResult = document.getElementById("lockResult");
+const savedBg = localStorage.getItem("master_bg");
+const savedText = localStorage.getItem("master_text");
+const savedBtn = localStorage.getItem("master_btn");
+const savedInput = localStorage.getItem("master_input");
 
+if (savedBg) {
+    document.body.style.backgroundColor = savedBg;
+}
+
+if (savedText) {
+    document.body.style.color = savedText;
+
+    document.querySelectorAll("*").forEach(element => {
+        element.style.color = savedText;
+    });
+}
+
+if (savedBtn) {
+    document.querySelectorAll("button").forEach(button => {
+        button.style.backgroundColor = savedBtn;
+    });
+}
+
+if (savedInput) {
+    document.querySelectorAll("input").forEach(input => {
+        input.style.backgroundColor = savedInput;
+    });
+}
 
 function showLocked() {
 
@@ -184,10 +212,44 @@ form.addEventListener("submit", async event => {
         window.location.href = answer.url;
         return;
     }
+   if (answer.type === "css") {
+
+    if (answer.target === "bg") {
+        document.body.style.backgroundColor = answer.value;
+        localStorage.setItem("master_bg", answer.value);
+    }
+
+    if (answer.target === "text") {
+        document.body.style.color = answer.value;
+
+        document.querySelectorAll("*").forEach(element => {
+            element.style.color = answer.value;
+        });
+
+        localStorage.setItem("master_text", answer.value);
+    }
+
+    if (answer.target === "btn") {
+        document.querySelectorAll("button").forEach(button => {
+            button.style.backgroundColor = answer.value;
+        });
+
+        localStorage.setItem("master_btn", answer.value);
+    }
+
+    if (answer.target === "input") {
+        document.querySelectorAll("input").forEach(input => {
+            input.style.backgroundColor = answer.value;
+        });
+
+        localStorage.setItem("master_input", answer.value);
+    }
+}
 
     if (answer.type === "result") {
         result.textContent = answer.text;
     }
+
 if (answer.type === "decrypt") {
 
     const text = answer.text;
