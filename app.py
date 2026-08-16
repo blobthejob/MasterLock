@@ -16,11 +16,16 @@ def home():
                 "type": "result",
                 "text": "Hello!"
             })
-
-        elif code == "ursjgduffsjhpjprywbxmho1573711627384937261738jdhx":
+        elif code == "no one in the world ever gets what they want and that is beautiful":
             return jsonify({
                 "type": "result",
-                "text": "CLUE 2: You have unlocked the next clue!"
+                "text": "CODE ACCEPTED"
+            })
+
+        elif code == "867 5309":
+            return jsonify({
+                "type": "result",
+                "text": "CODE ACCEPTED"
             })
 
         elif code.startswith("yt "):

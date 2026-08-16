@@ -27,7 +27,7 @@
             color: white;
             border: 2px solid #333;
             outline: none;
-            font-size: 40px;
+            font-size: 28px;
         }
 
         input:focus {
@@ -41,7 +41,7 @@
             color: white;
             border: 2px solid #333;
             cursor: pointer;
-            font-size: 36px;
+            font-size: 22px;
         }
 
         button:hover {
@@ -50,7 +50,7 @@
 
         .result {
             margin-top: 30px;
-            font-size: 20px;
+            font-size: 24px;
         }
     </style>
 </head>
@@ -71,7 +71,7 @@
 
         <button type="submit">Go</button>
 
-        <button type="button" id="mic">Mic</button>
+        <button type="button" id="mic">Listen</button>
 
     </form>
 
@@ -86,55 +86,77 @@
     const mic = document.getElementById("mic");
 
     form.addEventListener("submit", async event => {
-    event.preventDefault();
+        event.preventDefault();
 
-    const data = new FormData(form);
+        const data = new FormData(form);
 
-    const response = await fetch("/", {
-        method: "POST",
-        body: data
+        const response = await fetch("/", {
+            method: "POST",
+            body: data
+        });
+
+        const answer = await response.json();
+
+        input.value = "";
+
+        if (answer.type === "url") {
+            window.location.href = answer.url;
+        }
+
+        if (answer.type === "result") {
+            result.textContent = answer.text;
+        }
     });
-
-    const answer = await response.json();
-
-    if (answer.type === "url") {
-        window.location.href = answer.url;
-    }
-
-    if (answer.type === "result") {
-        result.textContent = answer.text;
-    }
-});
 
 
     const SpeechRecognition =
         window.SpeechRecognition ||
         window.webkitSpeechRecognition;
 
+    let listening = false;
+    let recognition;
+
     if (SpeechRecognition) {
 
-        const recognition = new SpeechRecognition();
+        recognition = new SpeechRecognition();
 
         recognition.lang = "en-GB";
-        recognition.continuous = false;
+        recognition.continuous = true;
         recognition.interimResults = false;
 
         mic.addEventListener("click", () => {
+
+            if (listening) {
+                recognition.stop();
+                return;
+            }
+
             recognition.start();
+
+        });
+
+        recognition.addEventListener("start", () => {
+            listening = true;
             mic.textContent = "Listening...";
         });
 
         recognition.addEventListener("result", event => {
-            input.value = event.results[0][0].transcript;
+            const text =
+                event.results[event.results.length - 1][0].transcript;
+
+            input.value = text;
         });
 
         recognition.addEventListener("end", () => {
-            mic.textContent = "Mic";
+            listening = false;
+            mic.textContent = "Listen";
         });
 
         recognition.addEventListener("error", event => {
             console.log("Speech recognition error:", event.error);
-            mic.textContent = "Mic";
+
+            listening = false;
+            mic.textContent = "Listen";
         });
 
     } else {
