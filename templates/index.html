@@ -192,6 +192,9 @@ form.addEventListener("submit", async event => {
 
     event.preventDefault();
 
+    result.textContent = "";
+    input.value = "";
+
     const data = new FormData(form);
 
     const response = await fetch("/", {
