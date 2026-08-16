@@ -358,6 +358,7 @@ unlockButton.addEventListener("click", async () => {
     const answer = await response.json();
 
     if (answer.type === "reset") {
+        lockResult.textContent = "RESET";
 
         localStorage.removeItem("masterUnlocked");
 
