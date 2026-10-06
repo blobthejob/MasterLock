@@ -26,6 +26,172 @@ def get_colour(value):
 
 app = Flask(__name__)
 
+
+# #encryption
+
+import base64
+
+
+CIPHER_PREFIX = "NX1:"
+
+CIPHER_KEY_1 = 0x5B
+CIPHER_KEY_2 = 0xA7
+
+
+def rotate_left(value, amount):
+    amount %= 8
+
+    if amount == 0:
+        return value
+
+    return (
+        (value << amount)
+        | (value >> (8 - amount))
+    ) & 0xFF
+
+
+def rotate_right(value, amount):
+    amount %= 8
+
+    if amount == 0:
+        return value
+
+    return (
+        (value >> amount)
+        | (value << (8 - amount))
+    ) & 0xFF
+
+
+def encrypt_text(text):
+
+    data = text.encode("utf-8")
+
+    encrypted = []
+    previous = 0
+
+    for position, byte in enumerate(data):
+
+        # Stage 1
+        value = (
+            byte
+            + CIPHER_KEY_1
+            + (17 * position)
+        ) & 0xFF
+
+        # Stage 2
+        value ^= (
+            CIPHER_KEY_2
+            + (31 * position)
+        ) & 0xFF
+
+        # Stage 3
+        value = rotate_left(
+            value,
+            3 + (position % 5)
+        )
+
+        # Stage 4
+        multiplier = 5 + (2 * (position % 5))
+
+        value = (
+            (value * multiplier)
+            + (19 * position)
+            + 23
+        ) & 0xFF
+
+        # Stage 5
+        value = (
+            value + previous
+        ) & 0xFF
+
+        # Stage 6
+        previous = value
+        encrypted.append(value)
+
+    encoded = base64.urlsafe_b64encode(
+        bytes(encrypted)
+    ).decode("ascii").rstrip("=")
+
+    return CIPHER_PREFIX + encoded
+
+
+def decrypt_text(text):
+
+    if not text.startswith(CIPHER_PREFIX):
+        return None
+
+    encoded = text[len(CIPHER_PREFIX):]
+
+    padding = "=" * (
+        (4 - len(encoded) % 4) % 4
+    )
+
+    try:
+        raw = base64.urlsafe_b64decode(
+            encoded + padding
+        )
+    except Exception:
+        return None
+
+    encrypted = list(raw)
+
+    # Undo Stage 5
+    values = []
+    previous = 0
+
+    for value in encrypted:
+
+        original_value = (
+            value - previous
+        ) & 0xFF
+
+        values.append(original_value)
+        previous = value
+
+    decrypted = []
+
+    for position, value in enumerate(values):
+
+        # Undo Stage 4
+        multiplier = 5 + (2 * (position % 5))
+
+        inverse = pow(
+            multiplier,
+            -1,
+            256
+        )
+
+        value = (
+            (
+                value
+                - (19 * position)
+                - 23
+            ) * inverse
+        ) & 0xFF
+
+        # Undo Stage 3
+        value = rotate_right(
+            value,
+            3 + (position % 5)
+        )
+        # Undo Stage 2
+        value ^= (
+            CIPHER_KEY_2
+            + (31 * position)
+        ) & 0xFF
+        # Undo Stage 1
+        value = (
+            value
+            - CIPHER_KEY_1
+            - (17 * position)
+        ) & 0xFF
+        decrypted.append(value)
+    try:
+        return bytes(decrypted).decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+
+
 UNLOCK_CODE = "everybody wants to rule the world"
 RESET_CODE = "reset puzzle"
 CODES = {
@@ -62,7 +228,7 @@ def home():
                 "type": "unlock"
             })
 
-        elif code == "operation shitstorm":
+        elif "operation shi" in code:
             return jsonify({
                 "type": "lock"
             })
@@ -100,6 +266,59 @@ def home():
                 "type": "code",
                 "text": CODES[code]["text"],
                 "unlocks": CODES[code]["unlocks"]
+            })
+                # #encryption commands
+
+        elif code.startswith("encrypt "):
+
+            text = original[8:]
+
+            return jsonify({
+                "type": "result",
+                "text": encrypt_text(text)
+            })
+
+
+        elif code.startswith("decrypt "):
+
+            text = original[8:]
+
+            decrypted = decrypt_text(text)
+
+            if decrypted is None:
+                return jsonify({
+                    "type": "result",
+                    "text": "Invalid encryption code."
+                })
+
+            return jsonify({
+                "type": "result",
+                "text": decrypted
+            })
+
+
+        elif code.startswith("cipher "):
+
+            text = original[7:]
+
+            if text.startswith(CIPHER_PREFIX):
+
+                decrypted = decrypt_text(text)
+
+                if decrypted is None:
+                    return jsonify({
+                        "type": "result",
+                        "text": "Invalid encryption code."
+                    })
+
+                return jsonify({
+                    "type": "result",
+                    "text": decrypted
+                })
+
+            return jsonify({
+                "type": "result",
+                "text": encrypt_text(text)
             })
 
         elif code.startswith("yt "):
