@@ -53,7 +53,7 @@ CIPHER_VARIANTS = {
         "key2": 0x3D,
         "rotate": 5,
         "multiplier": 7,
-        "position_key": 23,
+        "position_key": 23, 
         "xor_position": 47,
         "add_position": 11,
         "add_constant": 41
@@ -506,15 +506,24 @@ def home():
             })
 
 
+        # #cipher command
+
         elif code.startswith("cipher "):
 
             text = original[7:]
 
-            if text.startswith(CIPHER_PREFIX):
+            # If it already has one of the known prefixes,
+            # decrypt it.
+
+            if any(
+                text.startswith(prefix)
+                for prefix in CIPHER_VARIANTS
+            ):
 
                 decrypted = decrypt_text(text)
 
                 if decrypted is None:
+
                     return jsonify({
                         "type": "result",
                         "text": "Invalid encryption code."
@@ -524,6 +533,8 @@ def home():
                     "type": "result",
                     "text": decrypted
                 })
+
+            # Otherwise encrypt it.
 
             return jsonify({
                 "type": "result",
