@@ -32,7 +32,7 @@ app = Flask(__name__)
 import base64
 
 
-CIPHER_PREFIX = "NX1:"
+CIPHER_PREFIX = "IUBDSVI"
 
 CIPHER_KEY_1 = 0x5B
 CIPHER_KEY_2 = 0xA7
