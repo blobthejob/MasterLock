@@ -13,7 +13,8 @@ COLOURS = {
     "pink": "pink",
     "orange": "orange",
     "gray": "gray",
-    "grey": "gray"
+    "grey": "gray",
+    "cyan": "cyan"
 }
 
 def get_colour(value):
