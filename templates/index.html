@@ -392,7 +392,6 @@ unlockCode.addEventListener("keydown", event => {
 
 });
 
-
 /* #microphone */
 
 const SpeechRecognition =
@@ -410,73 +409,89 @@ if (SpeechRecognition) {
     recognition.continuous = false;
     recognition.interimResults = false;
 
-    mic.addEventListener("click", () => {
-
-        if (listening) {
-            recognition.stop();
-            return;
-        }
-
-        try {
-            recognition.start();
-        } catch (error) {
-            if (error.name !== "InvalidStateError") {
-                console.error(error);
-            }
-        }
-
-    });
-
-
-    recognition.addEventListener("start", () => {
+    recognition.onstart = function() {
 
         listening = true;
-
         mic.textContent = "Listening...";
 
-    });
+        console.log("MICROPHONE STARTED");
 
+    };
 
-    recognition.addEventListener("result", event => {
+    recognition.onresult = function(event) {
 
         const text =
             event.results[0][0].transcript;
 
+        console.log("HEARD:", text);
+
         input.value = text;
 
-    });
+    };
 
-
-    recognition.addEventListener("end", () => {
-
-        listening = false;
-
-        mic.textContent = "Listen";
-
-    });
-
-
-    recognition.addEventListener("error", event => {
+    recognition.onerror = function(event) {
 
         listening = false;
-
         mic.textContent = "Listen";
 
         console.error(
-            "Speech recognition error:",
+            "MICROPHONE ERROR:",
             event.error
         );
+
+    };
+
+    recognition.onend = function() {
+
+        listening = false;
+        mic.textContent = "Listen";
+
+        console.log("MICROPHONE ENDED");
+
+    };
+
+
+    mic.addEventListener("click", function() {
+
+        console.log("MIC BUTTON CLICKED");
+
+        if (listening) {
+
+            console.log("STOPPING");
+
+            recognition.stop();
+
+            return;
+
+        }
+
+        console.log("STARTING");
+
+        try {
+
+            recognition.start();
+
+        } catch (error) {
+
+            console.error(
+                "START ERROR:",
+                error
+            );
+
+        }
 
     });
 
 } else {
 
     mic.disabled = true;
-
     mic.textContent = "No mic";
 
-}
+    console.error(
+        "SpeechRecognition is not supported."
+    );
 
+}
 </script>
 
 </body>
