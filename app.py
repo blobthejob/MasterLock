@@ -631,15 +631,45 @@ def home():
                 "type": "result",
                 "text": text.swapcase()
             })
-
+        
+        # #binary command
+        elif code.startswith("binary "):
+            text = original[7:].strip()
+            # Binary to text
+            if text and all(
+                part in {"0", "1"}
+                for part in text.replace(" ", "")
+            ):
+                bits = text.split()
+                if all(len(part) == 8 for part in bits):
+                    try:
+                        decoded = "".join(
+                            chr(int(part, 2))
+                            for part in bits
+                        )
+                        return jsonify({
+                            "type": "result",
+                            "text": decoded
+                        })
+                    except Exception:
+                        pass
+                    
+            # Text to binary
+            binary = " ".join(
+                format(byte, "08b")
+                for byte in text.encode("utf-8")
+            )
+            return jsonify({
+                "type": "result",
+                "text": binary
+            })
+        
         elif code.startswith("yt "):
             search = original[3:]
-
             return jsonify({
                 "type": "url",
                 "url": "https://www.youtube.com/results?search_query=" + quote(search)
             })
-
         elif code.startswith("youtube "):
             search = original[8:]
 
