@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <script>
-console.log("Version: 3")
+console.log("Version: 4")
 </script>
 <head>
     <title>Master Lock</title>
@@ -236,7 +236,7 @@ const response = await fetch("/", {
     }
 
     if (answer.type === "url") {
-        window.location.href = answer.url;
+        window.open(answer.url, "_blank");
         return;
     }
    if (answer.type === "css") {
