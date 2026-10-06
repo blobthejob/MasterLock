@@ -540,6 +540,96 @@ def home():
                 "type": "result",
                 "text": encrypt_text(text)
             })
+        # #text commands
+
+        elif code.startswith("upper "):
+
+            text = original[6:]
+
+            return jsonify({
+                "type": "result",
+                "text": text.upper()
+            })
+
+
+        elif code.startswith("lower "):
+
+            text = original[6:]
+
+            return jsonify({
+                "type": "result",
+                "text": text.lower()
+            })
+
+
+        elif code.startswith("length "):
+
+            text = original[7:]
+
+            return jsonify({
+                "type": "result",
+                "text": str(len(text))
+            })
+
+
+        elif code.startswith("reverse "):
+
+            text = original[8:]
+
+            return jsonify({
+                "type": "result",
+                "text": text[::-1]
+            })
+
+
+        elif code.startswith("words "):
+
+            text = original[6:]
+
+            return jsonify({
+                "type": "result",
+                "text": str(len(text.split()))
+            })
+
+
+        elif code.startswith("chars "):
+
+            text = original[6:]
+
+            return jsonify({
+                "type": "result",
+                "text": str(len(text))
+            })
+
+
+        elif code.startswith("trim "):
+
+            text = original[5:]
+
+            return jsonify({
+                "type": "result",
+                "text": text.strip()
+            })
+
+
+        elif code.startswith("title "):
+
+            text = original[6:]
+
+            return jsonify({
+                "type": "result",
+                "text": text.title()
+            })
+
+
+        elif code.startswith("swap "):
+
+            text = original[5:]
+
+            return jsonify({
+                "type": "result",
+                "text": text.swapcase()
+            })
 
         elif code.startswith("yt "):
             search = original[3:]
