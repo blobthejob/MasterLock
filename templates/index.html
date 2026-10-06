@@ -72,7 +72,7 @@
 
 <body>
 <script>
-console.log("Version: 1")
+console.log("Version: 2")
 </script>
 <div class="container">
 
@@ -405,54 +405,6 @@ let listening = false;
 
 if (SpeechRecognition) {
 
-    recognition = new SpeechRecognition();
-
-    recognition.lang = "en-GB";
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = function() {
-
-        listening = true;
-        mic.textContent = "Listening...";
-
-        console.log("MICROPHONE STARTED");
-
-    };
-
-    recognition.onresult = function(event) {
-
-        const text =
-            event.results[0][0].transcript;
-
-        console.log("HEARD:", text);
-
-        input.value = text;
-
-    };
-
-    recognition.onerror = function(event) {
-
-        listening = false;
-        mic.textContent = "Listen";
-
-        console.error(
-            "MICROPHONE ERROR:",
-            event.error
-        );
-
-    };
-
-    recognition.onend = function() {
-
-        listening = false;
-        mic.textContent = "Listen";
-
-        console.log("MICROPHONE ENDED");
-
-    };
-
-
     mic.addEventListener("click", function() {
 
         console.log("MIC BUTTON CLICKED");
@@ -461,17 +413,72 @@ if (SpeechRecognition) {
 
             console.log("STOPPING");
 
-            recognition.stop();
+            if (recognition) {
+                recognition.stop();
+            }
 
             return;
-
         }
 
-        console.log("STARTING");
+        console.log("CREATING RECOGNITION");
+
+        recognition = new SpeechRecognition();
+
+        recognition.lang = "en-GB";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = function() {
+
+            listening = true;
+
+            mic.textContent = "Listening...";
+
+            console.log("MICROPHONE STARTED");
+
+        };
+
+        recognition.onresult = function(event) {
+
+            const text =
+                event.results[0][0].transcript;
+
+            console.log("HEARD:", text);
+
+            input.value = text;
+
+        };
+
+        recognition.onerror = function(event) {
+
+            console.error(
+                "MICROPHONE ERROR:",
+                event.error
+            );
+
+            listening = false;
+
+            mic.textContent = "Listen";
+
+        };
+
+        recognition.onend = function() {
+
+            console.log("MICROPHONE ENDED");
+
+            listening = false;
+
+            mic.textContent = "Listen";
+
+            recognition = null;
+
+        };
 
         try {
 
             recognition.start();
+
+            console.log("STARTING");
 
         } catch (error) {
 
@@ -480,6 +487,12 @@ if (SpeechRecognition) {
                 error
             );
 
+            listening = false;
+
+            mic.textContent = "Listen";
+
+            recognition = null;
+
         }
 
     });
@@ -487,6 +500,7 @@ if (SpeechRecognition) {
 } else {
 
     mic.disabled = true;
+
     mic.textContent = "No mic";
 
     console.error(
@@ -494,6 +508,7 @@ if (SpeechRecognition) {
     );
 
 }
+
 </script>
 
 </body>
