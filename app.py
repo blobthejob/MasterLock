@@ -30,165 +30,374 @@ app = Flask(__name__)
 # #encryption
 
 import base64
+import random
 
 
-CIPHER_PREFIX = "IUBDSVI"
+# #cipher variants
 
-CIPHER_KEY_1 = 0x5B
-CIPHER_KEY_2 = 0xA7
+CIPHER_VARIANTS = {
 
+    "iubdsvi:": {
+        "key1": 0x5B,
+        "key2": 0xA7,
+        "rotate": 3,
+        "multiplier": 5,
+        "position_key": 17,
+        "xor_position": 31,
+        "add_position": 19,
+        "add_constant": 23
+    },
+
+    "nxvkrta:": {
+        "key1": 0x91,
+        "key2": 0x3D,
+        "rotate": 5,
+        "multiplier": 7,
+        "position_key": 23,
+        "xor_position": 47,
+        "add_position": 11,
+        "add_constant": 41
+    },
+
+    "qzlmepo:": {
+        "key1": 0x2F,
+        "key2": 0xC1,
+        "rotate": 2,
+        "multiplier": 9,
+        "position_key": 13,
+        "xor_position": 37,
+        "add_position": 29,
+        "add_constant": 67
+    },
+
+    "rjvhtkc:": {
+        "key1": 0xD4,
+        "key2": 0x68,
+        "rotate": 7,
+        "multiplier": 11,
+        "position_key": 31,
+        "xor_position": 19,
+        "add_position": 43,
+        "add_constant": 17
+    },
+
+    "wpxfona:": {
+        "key1": 0x46,
+        "key2": 0xB9,
+        "rotate": 4,
+        "multiplier": 13,
+        "position_key": 29,
+        "xor_position": 53,
+        "add_position": 7,
+        "add_constant": 89
+    },
+
+    "bqydrmu:": {
+        "key1": 0xE3,
+        "key2": 0x27,
+        "rotate": 6,
+        "multiplier": 15,
+        "position_key": 41,
+        "xor_position": 23,
+        "add_position": 31,
+        "add_constant": 53
+    },
+
+    "kcgzvei:": {
+        "key1": 0x74,
+        "key2": 0xDA,
+        "rotate": 1,
+        "multiplier": 17,
+        "position_key": 37,
+        "xor_position": 61,
+        "add_position": 17,
+        "add_constant": 71
+    },
+
+    "tmsxjup:": {
+        "key1": 0xBC,
+        "key2": 0x52,
+        "rotate": 3,
+        "multiplier": 19,
+        "position_key": 47,
+        "xor_position": 29,
+        "add_position": 53,
+        "add_constant": 37
+    },
+
+    "fhrqkdl:": {
+        "key1": 0x18,
+        "key2": 0xF3,
+        "rotate": 5,
+        "multiplier": 21,
+        "position_key": 19,
+        "xor_position": 43,
+        "add_position": 61,
+        "add_constant": 97
+    },
+
+    "zavnbic:": {
+        "key1": 0xC7,
+        "key2": 0x84,
+        "rotate": 7,
+        "multiplier": 23,
+        "position_key": 53,
+        "xor_position": 67,
+        "add_position": 37,
+        "add_constant": 79
+    }
+
+}
+
+
+# #rotate left
 
 def rotate_left(value, amount):
+
     amount %= 8
 
     if amount == 0:
         return value
 
     return (
-        (value << amount)
-        | (value >> (8 - amount))
+        (value << amount) |
+        (value >> (8 - amount))
     ) & 0xFF
 
+
+# #rotate right
 
 def rotate_right(value, amount):
+
     amount %= 8
 
     if amount == 0:
         return value
 
     return (
-        (value >> amount)
-        | (value << (8 - amount))
+        (value >> amount) |
+        (value << (8 - amount))
     ) & 0xFF
 
 
+# #encrypt
+
 def encrypt_text(text):
+
+    prefix = random.choice(
+        list(CIPHER_VARIANTS.keys())
+    )
+
+    variant = CIPHER_VARIANTS[prefix]
 
     data = text.encode("utf-8")
 
     encrypted = []
+
     previous = 0
 
     for position, byte in enumerate(data):
 
-        # Stage 1
+        # stage 1
+
         value = (
-            byte
-            + CIPHER_KEY_1
-            + (17 * position)
+            byte +
+            variant["key1"] +
+            (
+                variant["position_key"] *
+                position
+            )
         ) & 0xFF
 
-        # Stage 2
+        # stage 2
+
         value ^= (
-            CIPHER_KEY_2
-            + (31 * position)
+            variant["key2"] +
+            (
+                variant["xor_position"] *
+                position
+            )
         ) & 0xFF
 
-        # Stage 3
-        value = rotate_left(
-            value,
-            3 + (position % 5)
+        # stage 3
+
+        rotation = (
+            variant["rotate"] +
+            (position % 5)
         )
 
-        # Stage 4
-        multiplier = 5 + (2 * (position % 5))
+        value = rotate_left(
+            value,
+            rotation
+        )
+
+        # stage 4
+
+        multiplier = (
+            variant["multiplier"] +
+            (2 * (position % 5))
+        )
 
         value = (
-            (value * multiplier)
-            + (19 * position)
-            + 23
+            (
+                value *
+                multiplier
+            ) +
+            (
+                variant["add_position"] *
+                position
+            ) +
+            variant["add_constant"]
         ) & 0xFF
 
-        # Stage 5
+        # stage 5
+
         value = (
-            value + previous
+            value +
+            previous
         ) & 0xFF
 
-        # Stage 6
         previous = value
+
         encrypted.append(value)
 
     encoded = base64.urlsafe_b64encode(
         bytes(encrypted)
     ).decode("ascii").rstrip("=")
 
-    return CIPHER_PREFIX + encoded
+    return prefix + encoded
 
+
+# #decrypt
 
 def decrypt_text(text):
 
-    if not text.startswith(CIPHER_PREFIX):
+    prefix = None
+
+    for possible_prefix in CIPHER_VARIANTS:
+
+        if text.startswith(possible_prefix):
+
+            prefix = possible_prefix
+
+            break
+
+    if prefix is None:
         return None
 
-    encoded = text[len(CIPHER_PREFIX):]
+    variant = CIPHER_VARIANTS[prefix]
+
+    encoded = text[len(prefix):]
 
     padding = "=" * (
         (4 - len(encoded) % 4) % 4
     )
 
     try:
+
         raw = base64.urlsafe_b64decode(
             encoded + padding
         )
+
     except Exception:
+
         return None
 
     encrypted = list(raw)
 
-    # Undo Stage 5
     values = []
+
     previous = 0
+
+    # #reverse stage 5
 
     for value in encrypted:
 
         original_value = (
-            value - previous
+            value -
+            previous
         ) & 0xFF
 
         values.append(original_value)
+
         previous = value
 
     decrypted = []
 
     for position, value in enumerate(values):
 
-        # Undo Stage 4
-        multiplier = 5 + (2 * (position % 5))
+        # reverse stage 4
 
-        inverse = pow(
-            multiplier,
-            -1,
-            256
+        multiplier = (
+            variant["multiplier"] +
+            (2 * (position % 5))
         )
+
+        try:
+
+            inverse = pow(
+                multiplier,
+                -1,
+                256
+            )
+
+        except ValueError:
+
+            return None
 
         value = (
             (
-                value
-                - (19 * position)
-                - 23
-            ) * inverse
+                value -
+                (
+                    variant["add_position"] *
+                    position
+                ) -
+                variant["add_constant"]
+            ) *
+            inverse
         ) & 0xFF
 
-        # Undo Stage 3
+        # reverse stage 3
+
+        rotation = (
+            variant["rotate"] +
+            (position % 5)
+        )
+
         value = rotate_right(
             value,
-            3 + (position % 5)
+            rotation
         )
-        # Undo Stage 2
+
+        # reverse stage 2
+
         value ^= (
-            CIPHER_KEY_2
-            + (31 * position)
+            variant["key2"] +
+            (
+                variant["xor_position"] *
+                position
+            )
         ) & 0xFF
-        # Undo Stage 1
+
+        # reverse stage 1
+
         value = (
-            value
-            - CIPHER_KEY_1
-            - (17 * position)
+            value -
+            variant["key1"] -
+            (
+                variant["position_key"] *
+                position
+            )
         ) & 0xFF
+
         decrypted.append(value)
+
     try:
+
         return bytes(decrypted).decode("utf-8")
+
     except UnicodeDecodeError:
+
         return None
 
 
