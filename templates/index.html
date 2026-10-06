@@ -393,19 +393,21 @@ unlockCode.addEventListener("keydown", event => {
 });
 
 
+/* #microphone */
+
 const SpeechRecognition =
     window.SpeechRecognition ||
     window.webkitSpeechRecognition;
 
+let recognition = null;
 let listening = false;
-let recognition;
 
 if (SpeechRecognition) {
 
     recognition = new SpeechRecognition();
 
     recognition.lang = "en-GB";
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.interimResults = false;
 
     mic.addEventListener("click", () => {
@@ -415,34 +417,62 @@ if (SpeechRecognition) {
             return;
         }
 
-        recognition.start();
+        try {
+            recognition.start();
+        } catch (error) {
+            if (error.name !== "InvalidStateError") {
+                console.error(error);
+            }
+        }
 
     });
+
 
     recognition.addEventListener("start", () => {
+
         listening = true;
+
         mic.textContent = "Listening...";
+
     });
+
 
     recognition.addEventListener("result", event => {
 
         const text =
-            event.results[event.results.length - 1][0].transcript;
+            event.results[0][0].transcript;
 
         input.value = text;
 
     });
 
+
     recognition.addEventListener("end", () => {
 
         listening = false;
+
         mic.textContent = "Listen";
+
+    });
+
+
+    recognition.addEventListener("error", event => {
+
+        listening = false;
+
+        mic.textContent = "Listen";
+
+        console.error(
+            "Speech recognition error:",
+            event.error
+        );
 
     });
 
 } else {
 
     mic.disabled = true;
+
     mic.textContent = "No mic";
 
 }
