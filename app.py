@@ -678,6 +678,12 @@ def home():
                 "url": "https://www.youtube.com/results?search_query=" + quote(search)
             })
 
+        elif code.startswith("startpage "):
+            search = original[10:]
+            return jsonify({
+                "type": "url",
+                "url": "https://www.startpage.com/sp/search?sc=a8mbuE7dTHEw7be6dlK4UDzyUn5QdqVb4ODUfz9WgPssushtzAgfGFuatzCa6KnFwG3MqZkGtyoMcBbTxbAiKgGRYBFIbdsTP&t=device&language=english&lui=english&segment=startpage.udog&abp=0&abd=0&abe=0&query=" + quote(search)
+            })
         elif code.startswith("wiki "):
             search = original[5:]
 
