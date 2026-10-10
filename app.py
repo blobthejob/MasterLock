@@ -1,3 +1,7 @@
+
+#<==========VERSION==========>
+version = 22
+
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
 from datetime import datetime
@@ -33,10 +37,6 @@ def get_colour(value):
     return None
 
 app = Flask(__name__)
-
-#<==========VERSION==========>
-version = 21
-
 
 # Safe calculator
 def calculate_expression(expression):
@@ -631,14 +631,16 @@ def home():
         elif code == "about":
             html_version = request.form.get(
                 "html_version",
-                "unknown"
+                "0"
             )
+
+            total_version = version + int(html_version)
 
             return jsonify({
                 "type": "result",
                 "text": (
                     "MASTER LOCK\n"
-                    "VERSION: " + str(version+int("html_version")) + "\n"
+                    "VERSION: " + str(total_version) + "\n"
                     "STATUS: OPERATIONAL\n"
                     "INTERFACE: ACTIVE"
                 )
