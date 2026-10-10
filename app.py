@@ -33,7 +33,7 @@ def get_colour(value):
 app = Flask(__name__)
 
 #<==========VERSION==========>
-version = 15
+version = 16
 
 
 # #cipher variants
@@ -526,7 +526,7 @@ def home():
                "text":"Hello!"
             })
         
-        elif code =="no one in th eworld ever gets what they want and that is beautiful":
+        elif code =="no one in the world ever gets what they want and that is beautiful":
             return jsonify({
                "type":"decrypt",
                "text":"everybody dies frustrated and sad\nand that is beautiful"
@@ -582,6 +582,24 @@ def home():
             })
         
                 # #encryption commands
+                
+        elif any(
+            original.startswith(prefix)
+            for prefix in CIPHER_VARIANTS
+        ):
+
+            decrypted = decrypt_text(original)
+
+            if decrypted is None:
+                return jsonify({
+                    "type": "result",
+                    "text": "Invalid encryption code."
+                })
+
+            return jsonify({
+                "type": "result",
+                "text": decrypted
+            })
 
         elif code.startswith("encrypt "):
 
