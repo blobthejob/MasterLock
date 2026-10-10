@@ -183,7 +183,7 @@ def calculate_maths(command):
     elif operation == "count":
         answer = len(numbers)
 
-    elif operation in ("nth", "nthterm")::
+    elif operation in ("nth", "nthterm"):
         if len(numbers) < 2:
             return "Enter at least two terms."
 
