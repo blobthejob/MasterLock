@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 27
+version = 28
 
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
@@ -146,42 +146,42 @@ def format_quadratic(a, b, c):
 # maths commands
 
 def calculate_maths(command):
-parts = command.strip().lower().split()
+    parts = command.strip().lower().split()
 
-if len(parts) < 2:
-    return "Enter a command followed by numbers."
+    if len(parts) < 2:
+        return "Enter a command followed by numbers."
 
-operation = parts[0]
+    operation = parts[0]
 
-try:
-    numbers = [float(n) for n in parts[1:]]
-except ValueError:
-    return "Invalid input. Use numbers separated by spaces."
+    try:
+        numbers = [float(n) for n in parts[1:]]
+    except ValueError:
+        return "Invalid input. Use numbers separated by spaces."
 
-if not numbers:
-    return "Enter at least one number."
+    if not numbers:
+        return "Enter at least one number."
 
-if not all(abs(n) < float("inf") for n in numbers):
-    return "Please enter finite numbers only."
+    if not all(abs(n) < float("inf") for n in numbers):
+        return "Please enter finite numbers only."
 
-if operation == "mean":
-    answer = statistics.mean(numbers)
+    if operation == "mean":
+        answer = statistics.mean(numbers)
 
-elif operation == "median":
-    answer = statistics.median(numbers)
+    elif operation == "median":
+        answer = statistics.median(numbers)
 
-elif operation == "mode":
-    modes = statistics.multimode(numbers)
-    answer = ", ".join(f"{n:g}" for n in modes)
+    elif operation == "mode":
+        modes = statistics.multimode(numbers)
+        answer = ", ".join(f"{n:g}" for n in modes)
 
-elif operation == "range":
-    answer = max(numbers) - min(numbers)
+    elif operation == "range":
+        answer = max(numbers) - min(numbers)
 
-elif operation == "sum":
-    answer = sum(numbers)
+    elif operation == "sum":
+        answer = sum(numbers)
 
-elif operation == "count":
-    answer = len(numbers)
+    elif operation == "count":
+        answer = len(numbers)
 
 
     elif operation == "nthterm":
@@ -211,11 +211,11 @@ elif operation == "count":
         b = first_differences[0] - 3 * a
         c = numbers[0] - a - b
         return format_quadratic(a, b, c)
-else:
-    return "Unknown maths command."
-if isinstance(answer, float):
-    answer = f"{answer:g}"
-return str(answer)
+    else:
+        return "Unknown maths command."
+    if isinstance(answer, float):
+        answer = f"{answer:g}"
+    return str(answer)
 
 # #cipher variants
 
