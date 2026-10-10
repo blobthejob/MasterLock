@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 11;
+        const HTML_VERSION = 12;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -1009,12 +1009,16 @@ if (answer.type === "ai") {
     const aiFailed = /usage limit|temporarily unavailable|couldn't process|couldn't generate|not configured/i.test(aiMessage);
     if (aiFailed) {
         result.textContent = aiMessage + "\n\nSearching Google in 3 seconds...";
-        setTimeout(() => {
-            const googleURL =
-                "https://www.google.com/search?q=" +
-                encodeURIComponent(submittedCommand);
-            window.location.href = googleURL;
-        }, 3000);
+setTimeout(() => {
+    const googleURL =
+        "https://www.google.com/search?q=" +
+        encodeURIComponent(submittedCommand);
+
+    window.open(googleURL, "_blank");
+
+    result.textContent = aiMessage +
+        "\n\nGoogle search opened in a new tab.";
+}, 3000);
     }
     return;
 }
