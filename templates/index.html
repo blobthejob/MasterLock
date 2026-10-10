@@ -133,6 +133,13 @@ const lockedScreen = document.getElementById("lockedScreen");
 const unlockCode = document.getElementById("unlockCode");
 const unlockButton = document.getElementById("unlockButton");
 const lockResult = document.getElementById("lockResult");
+
+// #command history
+let commandHistory = JSON.parse(
+    localStorage.getItem("masterCommandHistory") || "[]"
+);
+let historyIndex = commandHistory.length;
+
 const savedBg = localStorage.getItem("master_bg");
 const savedText = localStorage.getItem("master_text");
 const savedBtn = localStorage.getItem("master_btn");
@@ -210,6 +217,50 @@ if (localStorage.getItem("masterLockLocked") === "true") {
 form.addEventListener("submit", async event => {
 
     event.preventDefault();
+
+    const submittedCommand = input.value.trim();
+
+    // #save command history
+
+    if (submittedCommand) {
+
+        commandHistory.push(submittedCommand);
+
+        if (commandHistory.length > 100) {
+            commandHistory.shift();
+        }
+
+        localStorage.setItem(
+            "masterCommandHistory",
+            JSON.stringify(commandHistory)
+        );
+
+    }
+
+    historyIndex = commandHistory.length;
+
+    // #clear command
+
+    if (submittedCommand.toLowerCase() === "clear") {
+
+        result.textContent = "";
+        input.value = "";
+
+        return;
+    }
+
+    // #history command
+
+    if (submittedCommand.toLowerCase() === "history") {
+
+        result.textContent = commandHistory.length
+            ? commandHistory.join("\n")
+            : "No command history yet.";
+
+        input.value = "";
+
+        return;
+    }
 
     result.textContent = "";
 
@@ -508,6 +559,52 @@ if (SpeechRecognition) {
     );
 
 }
+
+// #keyboard shortcuts
+
+input.addEventListener("keydown", event => {
+
+    if (event.key === "ArrowUp") {
+
+        event.preventDefault();
+
+        if (commandHistory.length === 0) {
+            return;
+        }
+
+        historyIndex = Math.max(0, historyIndex - 1);
+
+        input.value = commandHistory[historyIndex];
+
+    }
+
+    else if (event.key === "ArrowDown") {
+
+        event.preventDefault();
+
+        if (commandHistory.length === 0) {
+            return;
+        }
+
+        historyIndex = Math.min(
+            commandHistory.length,
+            historyIndex + 1
+        );
+
+        input.value = historyIndex === commandHistory.length
+            ? ""
+            : commandHistory[historyIndex];
+
+    }
+
+    else if (event.key === "Escape") {
+
+        input.value = "";
+        historyIndex = commandHistory.length;
+
+    }
+
+});
 
 </script>
 
