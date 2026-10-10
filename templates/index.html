@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 10;
+        const HTML_VERSION = 11;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -877,6 +877,22 @@ form.addEventListener("submit", async event => {
     if (submittedCommand.toLowerCase() === "clear") {
 
         result.textContent = "";
+        input.value = "";
+
+        return;
+    }
+
+
+    // #clear history command
+
+    if (submittedCommand.toLowerCase() === "history clear") {
+
+        commandHistory = [];
+        historyIndex = 0;
+
+        localStorage.removeItem("masterCommandHistory");
+
+        result.textContent = "Command history cleared.";
         input.value = "";
 
         return;
