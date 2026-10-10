@@ -426,7 +426,7 @@ def home():
     if request.method =="POST":
 
         original = request.form["code"]
-        code = original.lower().replace(",","").replace(".","").replace("'","").replace("","")
+        code = original.lower().replace(",","").replace(".","").replace("'","").replace(" ","").replace("?","").replace("!","").replace("<","").replace(">","")
 
         locked = request.form.get("locked") =="true"
 
@@ -503,7 +503,7 @@ def home():
         elif code =="about":
             return jsonify({
                "type":"result",
-               "text":"MASTER LOCK\nVERSION: 5\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
+               "text":"MASTER LOCK\nVERSION: 6\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
             })
         
                 # #encryption commands
