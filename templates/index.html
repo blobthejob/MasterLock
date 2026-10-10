@@ -1,26 +1,27 @@
 <!DOCTYPE html>
 <html>
 <script>
-console.log("Version: 4")
+console.log("HTML Version: 5")
 </script>
 <head>
     <title>Master Lock</title>
 
     <style>
-        body {
-            background: black;
-            color: #440033;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: Arial, sans-serif;
-        }
-
-        .container {
-            text-align: center;
-        }
+       
+	body {
+	    background: black;
+ 	   color: #440033;
+ 	   margin: 0;
+	    min-height: 100vh;
+	    font-family: Arial, sans-serif;
+	}
+   
+	.container {
+	    text-align: center;
+	    width: 100%;
+	    max-height: 100vh;
+	    overflow-y: auto;
+	}
 
         input {
             width: 600px;
@@ -36,6 +37,14 @@ console.log("Version: 4")
         input:focus {
             border-color: #777;
         }
+	
+	#commandForm {
+ 	   position: sticky;
+  	  top: 0;
+  	  z-index: 1000;
+  	  background: black;
+  	  padding: 12px 0;
+	}
 
         button {
             padding: 15px 20px;
