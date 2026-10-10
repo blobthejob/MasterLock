@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 29
+version = 30
 
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
@@ -650,6 +650,7 @@ def home():
             "range",
             "sum",
             "count",
+            "nth",
             "nthterm",
         ]
 
@@ -788,13 +789,14 @@ def home():
             })
         # Maths commands
 
-        elif code.split(" ")[0] in [
+        elif code.split()[0] in [
             "mean",
             "median",
             "mode",
             "range",
             "sum",
             "count",
+            "nth",
             "nthterm",
         ]:
 
