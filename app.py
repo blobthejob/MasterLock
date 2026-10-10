@@ -425,8 +425,8 @@ def home():
 
     if request.method == "POST":
 
-        original = request.form["code"].strip()
-        code = original.lower().replace(",", "").replace(".", "").replace("'","")
+        original = request.form["code"]
+        code = original.lower().replace(",", "").replace(".", "").replace("'","").replace(" ", "")
 
         locked = request.form.get("locked") == "true"
 
