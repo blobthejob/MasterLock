@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 28
+version = 29
 
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
@@ -183,33 +183,35 @@ def calculate_maths(command):
     elif operation == "count":
         answer = len(numbers)
 
-
     elif operation == "nthterm":
         if len(numbers) < 2:
             return "Enter at least two terms."
-        # First differences
+
         first_differences = [
             numbers[i] - numbers[i - 1]
             for i in range(1, len(numbers))
         ]
-        # Arithmetic sequence: an + b
+
         if len(set(first_differences)) == 1:
             a = first_differences[0]
             b = numbers[0] - a
-
             return format_term(a, "n", b)
-        # Quadratic sequences: an^2 + bn + c
+
         if len(numbers) < 3:
             return "Enter at least three terms for a quadratic."
+
         second_differences = [
             first_differences[i] - first_differences[i - 1]
             for i in range(1, len(first_differences))
         ]
+
         if len(set(second_differences)) != 1:
             return "This is not a linear or quadratic sequence."
+
         a = second_differences[0] / 2
         b = first_differences[0] - 3 * a
         c = numbers[0] - a - b
+
         return format_quadratic(a, b, c)
     else:
         return "Unknown maths command."
