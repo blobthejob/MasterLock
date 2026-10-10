@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 24
+version = 26
 
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
@@ -89,57 +89,76 @@ def calculate_expression(expression):
 # maths commands
 
 def calculate_maths(command):
-    parts = command.strip().lower().split()
+parts = command.strip().lower().split()
 
-    if len(parts) < 2:
-        return "Enter a command followed by numbers."
+if len(parts) < 2:
+    return "Enter a command followed by numbers."
 
-    operation = parts[0]
+operation = parts[0]
 
-    try:
-        numbers = [float(n) for n in parts[1:]]
-    except ValueError:
-        return "Invalid input. Use numbers separated by spaces."
+try:
+    numbers = [float(n) for n in parts[1:]]
+except ValueError:
+    return "Invalid input. Use numbers separated by spaces."
 
-    if not numbers:
-        return "Enter at least one number."
+if not numbers:
+    return "Enter at least one number."
 
-    if operation == "mean":
-        answer = statistics.mean(numbers)
+if not all(abs(n) < float("inf") for n in numbers):
+    return "Please enter finite numbers only."
 
-    elif operation == "median":
-        answer = statistics.median(numbers)
+if operation == "mean":
+    answer = statistics.mean(numbers)
 
-    elif operation == "mode":
-        modes = statistics.multimode(numbers)
-        answer = ", ".join(map(str, modes))
+elif operation == "median":
+    answer = statistics.median(numbers)
 
-    elif operation == "range":
-        answer = max(numbers) - min(numbers)
+elif operation == "mode":
+    modes = statistics.multimode(numbers)
+    answer = ", ".join(f"{n:g}" for n in modes)
 
-    elif operation == "sum":
-        answer = sum(numbers)
+elif operation == "range":
+    answer = max(numbers) - min(numbers)
 
-    elif operation == "count":
-        answer = len(numbers)
+elif operation == "sum":
+    answer = sum(numbers)
+
+elif operation == "count":
+    answer = len(numbers)
+
 
     elif operation == "nthterm":
         if len(numbers) < 2:
-        return "Enter at least two terms."
-
-        difference = numbers[1] - numbers[0]
-        if not all(
-            numbers[i] - numbers[i - 1] == difference
+            return "Enter at least two terms."
+        # First differences
+        first_differences = [
+            numbers[i] - numbers[i - 1]
             for i in range(1, len(numbers))
-        ):
-            return "This is not an arithmetic sequence."
-        constant = numbers[0] - difference
-        answer = f"{difference:g}n {constant:+g}".replace("+", "+")
-    else:
-        return "Unknown maths command."
-    if isinstance(answer, float):
-        answer = f"{answer:g}"
-    return str(answer)
+        ]
+        # Arithmetic sequence: an + b
+        if len(set(first_differences)) == 1:
+            a = first_differences[0]
+            b = numbers[0] - a
+
+            return format_term(a, "n", b)
+        # Quadratic sequences: an^2 + bn + c
+        if len(numbers) < 3:
+            return "Enter at least three terms for a quadratic."
+        second_differences = [
+            first_differences[i] - first_differences[i - 1]
+            for i in range(1, len(first_differences))
+        ]
+        if len(set(second_differences)) != 1:
+            return "This is not a linear or quadratic sequence."
+        a = second_differences[0] / 2
+        b = first_differences[0] - 3 * a
+        c = numbers[0] - a - b
+        return format_quadratic(a, b, c)
+else:
+    return "Unknown maths command."
+if isinstance(answer, float):
+    answer = f"{answer:g}"
+return str(answer)
 
 # #cipher variants
 
