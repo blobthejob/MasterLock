@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 8;
+        const HTML_VERSION = 9;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -387,6 +387,12 @@ if (!response.ok) {
 
         localStorage.setItem("master_input", answer.value);
     }
+}
+
+// #AI answers - plain text, no spy animation
+if (answer.type === "ai") {
+    result.textContent = answer.text;
+    return;
 }
 
 // #spy animation - all results
