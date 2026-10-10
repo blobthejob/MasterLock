@@ -35,7 +35,7 @@ def get_colour(value):
 app = Flask(__name__)
 
 #<==========VERSION==========>
-version = 20
+version = 21
 
 
 # Safe calculator
@@ -638,8 +638,7 @@ def home():
                 "type": "result",
                 "text": (
                     "MASTER LOCK\n"
-                    "PYTHON VERSION: " + str(version) + "\n"
-                    "HTML VERSION: " + html_version + "\n"
+                    "VERSION: " + str(version+int("html_version")) + "\n"
                     "STATUS: OPERATIONAL\n"
                     "INTERFACE: ACTIVE"
                 )
