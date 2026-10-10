@@ -408,17 +408,17 @@ UNLOCK_CODE ="everybody wants to rule the world"
 RESET_CODE ="reset puzzle"
 CODES = {
 
-   "nos ossos que aqui estamos pelos vossos esperamos": {
+   "nosossosqueaquiestamospelosvossosesperamos": {
        "text":"You've found the first clue:\n\nWhere you now stand, seek words of Latin stone\nUpon this place, a secret waits alone\nLook up and find the message carved in bone\nAnd speak its meaning once the words are known",
-       "unlocks": ["melior est dies mortis die nativitatis"]
+       "unlocks": ["meliorestdiesmortisdienativitatis"]
     },
 
-   "melior est dies mortis die nativitatis":{
+   "meliorestdiesmortisdienativitatis":{
        "text":"Sub palmā viridis fōns dēserta per arva clāret,\nFrīgida vallis habet dulcem relevāta ardōrem;\nMurmure dulcī aqua per saxa serēna sonāret,\nHīc viātor bibit et relinquit errorem.",
        "unlocks": []
     }
 }
-START_UNLOCKED = ["nos ossos que aqui estamos pelos vossos esperamos"]
+START_UNLOCKED = ["nosossosqueaquiestamospelosvossosesperamos"]
 
 @app.route("/", methods=["GET","POST"])
 def home():
@@ -503,14 +503,14 @@ def home():
         elif code =="about":
             return jsonify({
                "type":"result",
-               "text":"MASTER LOCK\nVERSION: 4\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
+               "text":"MASTER LOCK\nVERSION: 5\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
             })
         
                 # #encryption commands
 
         elif code.startswith("encrypt"):
 
-            text = original[8:]
+            text = original[7:]
 
             return jsonify({
                "type":"result",
@@ -520,7 +520,7 @@ def home():
 
         elif code.startswith("decrypt"):
 
-            text = original[8:]
+            text = original[7:]
 
             decrypted = decrypt_text(text)
 
@@ -540,7 +540,7 @@ def home():
 
         elif code.startswith("cipher"):
 
-            text = original[7:]
+            text = original[6:]
 
             # If it already has one of the known prefixes,
             # decrypt it.
@@ -574,7 +574,7 @@ def home():
 
         elif code.startswith("upper"):
 
-            text = original[6:]
+            text = original[5:]
 
             return jsonify({
                "type":"result",
@@ -584,7 +584,7 @@ def home():
 
         elif code.startswith("lower"):
 
-            text = original[6:]
+            text = original[5:]
 
             return jsonify({
                "type":"result",
@@ -594,7 +594,7 @@ def home():
 
         elif code.startswith("length"):
 
-            text = original[7:]
+            text = original[6:]
 
             return jsonify({
                "type":"result",
@@ -604,7 +604,7 @@ def home():
 
         elif code.startswith("reverse"):
 
-            text = original[8:]
+            text = original[7:]
 
             return jsonify({
                "type":"result",
@@ -614,7 +614,7 @@ def home():
 
         elif code.startswith("words"):
 
-            text = original[6:]
+            text = original[5:]
 
             return jsonify({
                "type":"result",
@@ -624,7 +624,7 @@ def home():
 
         elif code.startswith("chars"):
 
-            text = original[6:]
+            text = original[5:]
 
             return jsonify({
                "type":"result",
@@ -634,7 +634,7 @@ def home():
 
         elif code.startswith("trim"):
 
-            text = original[5:]
+            text = original[4:]
 
             return jsonify({
                "type":"result",
@@ -644,7 +644,7 @@ def home():
 
         elif code.startswith("title"):
 
-            text = original[6:]
+            text = original[5:]
 
             return jsonify({
                "type":"result",
@@ -654,7 +654,7 @@ def home():
 
         elif code.startswith("swap"):
 
-            text = original[5:]
+            text = original[4:]
 
             return jsonify({
                "type":"result",
@@ -663,7 +663,7 @@ def home():
         
         # #binary command
         elif code.startswith("binary"):
-            text = original[7:].strip()
+            text = original[6:].strip()
             # Binary to text
             if text and all(
                 part in {"0","1"}
@@ -694,40 +694,40 @@ def home():
             })
         
         elif code.startswith("yt"):
-            search = original[3:]
+            search = original[2:]
             return jsonify({
                "type":"url",
                "url":"https://www.youtube.com/results?search_query=" + quote(search)
             })
         elif code.startswith("youtube"):
-            search = original[8:]
+            search = original[7:]
             return jsonify({
                "type":"url",
                "url":"https://www.youtube.com/results?search_query=" + quote(search)
             })
 
         elif code.startswith("startpage"):
-            search = original[10:]
+            search = original[9:]
             return jsonify({
                "type":"url",
                "url":"https://www.startpage.com/sp/search?sc=a8mbuE7dTHEw7be6dlK4UDzyUn5QdqVb4ODUfz9WgPssushtzAgfGFuatzCa6KnFwG3MqZkGtyoMcBbTxbAiKgGRYBFIbdsTP&t=device&language=english&lui=english&segment=startpage.udog&abp=0&abd=0&abe=0&query=" + quote(search)
             })
         
         elif code.startswith("wiki"):
-            search = original[5:]
+            search = original[4:]
             return jsonify({
                "type":"url",
                "url":"https://en.wikipedia.org/wiki/Special:Search?search=" + quote(search)
             })
 
         elif code.startswith("g"):
-            search = original[2:]
+            search = original[1:]
             return jsonify({
                "type":"url",
                "url":"https://www.google.com/search?q=" + quote(search)
             })
         elif code.startswith("bg"):
-            colour = get_colour(original[3:])
+            colour = get_colour(original[2:])
             if colour:
                 return jsonify({
                    "type":"css",
@@ -741,7 +741,7 @@ def home():
 
 
         elif code.startswith("text"):
-            colour = get_colour(original[5:])
+            colour = get_colour(original[4:])
             if colour:
                 return jsonify({
                    "type":"css",
@@ -754,7 +754,7 @@ def home():
             })
         
         elif code.startswith("btn"):
-            colour = get_colour(original[4:])
+            colour = get_colour(original[3:])
             if colour:
                 return jsonify({
                    "type":"css",
@@ -769,7 +769,7 @@ def home():
 
 
         elif code.startswith("input"):
-            colour = get_colour(original[6:])
+            colour = get_colour(original[5:])
             if colour:
                 return jsonify({
                    "type":"css",
