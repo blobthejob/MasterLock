@@ -1320,7 +1320,7 @@ def home():
 
         else:
             return jsonify({
-               "type": "result",
+               "type": "ai",
                "text": ask_ai(original)
             })
 
