@@ -5,18 +5,18 @@ from zoneinfo import ZoneInfo
 import re
 import json
 COLOURS = {
-    "black": "black",
-    "white": "white",
-    "red": "red",
-    "green": "green",
-    "blue": "blue",
-    "yellow": "yellow",
-    "purple": "purple",
-    "pink": "pink",
-    "orange": "orange",
-    "gray": "gray",
-    "grey": "gray",
-    "cyan": "cyan"
+   "black":"black",
+   "white":"white",
+   "red":"red",
+   "green":"green",
+   "blue":"blue",
+   "yellow":"yellow",
+   "purple":"purple",
+   "pink":"pink",
+   "orange":"orange",
+   "gray":"gray",
+   "grey":"gray",
+   "cyan":"cyan"
 }
 
 def get_colour(value):
@@ -40,114 +40,114 @@ import random
 
 CIPHER_VARIANTS = {
 
-    "iubdsvi:": {
-        "key1": 0x5B,
-        "key2": 0xA7,
-        "rotate": 3,
-        "multiplier": 5,
-        "position_key": 17,
-        "xor_position": 31,
-        "add_position": 19,
-        "add_constant": 23
+   "iubdsvi:": {
+       "key1": 0x5B,
+       "key2": 0xA7,
+       "rotate": 3,
+       "multiplier": 5,
+       "position_key": 17,
+       "xor_position": 31,
+       "add_position": 19,
+       "add_constant": 23
     },
 
-    "nxvkrta:": {
-        "key1": 0x91,
-        "key2": 0x3D,
-        "rotate": 5,
-        "multiplier": 7,
-        "position_key": 23, 
-        "xor_position": 47,
-        "add_position": 11,
-        "add_constant": 41
+   "nxvkrta:": {
+       "key1": 0x91,
+       "key2": 0x3D,
+       "rotate": 5,
+       "multiplier": 7,
+       "position_key": 23, 
+       "xor_position": 47,
+       "add_position": 11,
+       "add_constant": 41
     },
 
-    "qzlmepo:": {
-        "key1": 0x2F,
-        "key2": 0xC1,
-        "rotate": 2,
-        "multiplier": 9,
-        "position_key": 13,
-        "xor_position": 37,
-        "add_position": 29,
-        "add_constant": 67
+   "qzlmepo:": {
+       "key1": 0x2F,
+       "key2": 0xC1,
+       "rotate": 2,
+       "multiplier": 9,
+       "position_key": 13,
+       "xor_position": 37,
+       "add_position": 29,
+       "add_constant": 67
     },
 
-    "rjvhtkc:": {
-        "key1": 0xD4,
-        "key2": 0x68,
-        "rotate": 7,
-        "multiplier": 11,
-        "position_key": 31,
-        "xor_position": 19,
-        "add_position": 43,
-        "add_constant": 17
+   "rjvhtkc:": {
+       "key1": 0xD4,
+       "key2": 0x68,
+       "rotate": 7,
+       "multiplier": 11,
+       "position_key": 31,
+       "xor_position": 19,
+       "add_position": 43,
+       "add_constant": 17
     },
 
-    "wpxfona:": {
-        "key1": 0x46,
-        "key2": 0xB9,
-        "rotate": 4,
-        "multiplier": 13,
-        "position_key": 29,
-        "xor_position": 53,
-        "add_position": 7,
-        "add_constant": 89
+   "wpxfona:": {
+       "key1": 0x46,
+       "key2": 0xB9,
+       "rotate": 4,
+       "multiplier": 13,
+       "position_key": 29,
+       "xor_position": 53,
+       "add_position": 7,
+       "add_constant": 89
     },
 
-    "bqydrmu:": {
-        "key1": 0xE3,
-        "key2": 0x27,
-        "rotate": 6,
-        "multiplier": 15,
-        "position_key": 41,
-        "xor_position": 23,
-        "add_position": 31,
-        "add_constant": 53
+   "bqydrmu:": {
+       "key1": 0xE3,
+       "key2": 0x27,
+       "rotate": 6,
+       "multiplier": 15,
+       "position_key": 41,
+       "xor_position": 23,
+       "add_position": 31,
+       "add_constant": 53
     },
 
-    "kcgzvei:": {
-        "key1": 0x74,
-        "key2": 0xDA,
-        "rotate": 1,
-        "multiplier": 17,
-        "position_key": 37,
-        "xor_position": 61,
-        "add_position": 17,
-        "add_constant": 71
+   "kcgzvei:": {
+       "key1": 0x74,
+       "key2": 0xDA,
+       "rotate": 1,
+       "multiplier": 17,
+       "position_key": 37,
+       "xor_position": 61,
+       "add_position": 17,
+       "add_constant": 71
     },
 
-    "tmsxjup:": {
-        "key1": 0xBC,
-        "key2": 0x52,
-        "rotate": 3,
-        "multiplier": 19,
-        "position_key": 47,
-        "xor_position": 29,
-        "add_position": 53,
-        "add_constant": 37
+   "tmsxjup:": {
+       "key1": 0xBC,
+       "key2": 0x52,
+       "rotate": 3,
+       "multiplier": 19,
+       "position_key": 47,
+       "xor_position": 29,
+       "add_position": 53,
+       "add_constant": 37
     },
 
-    "fhrqkdl:": {
-        "key1": 0x18,
-        "key2": 0xF3,
-        "rotate": 5,
-        "multiplier": 21,
-        "position_key": 19,
-        "xor_position": 43,
-        "add_position": 61,
-        "add_constant": 97
+   "fhrqkdl:": {
+       "key1": 0x18,
+       "key2": 0xF3,
+       "rotate": 5,
+       "multiplier": 21,
+       "position_key": 19,
+       "xor_position": 43,
+       "add_position": 61,
+       "add_constant": 97
     },
 
-    "zavnbic:": {
-        "key1": 0xC7,
-        "key2": 0x84,
-        "rotate": 7,
-        "multiplier": 23,
-        "position_key": 53,
-        "xor_position": 67,
-        "add_position": 37,
-        "add_constant": 79
+   "zavnbic:": {
+       "key1": 0xC7,
+       "key2": 0x84,
+       "rotate": 7,
+       "multiplier": 23,
+       "position_key": 53,
+       "xor_position": 67,
+       "add_position": 37,
+       "add_constant": 79
     }
 
 }
@@ -292,7 +292,7 @@ def decrypt_text(text):
 
     encoded = text[len(prefix):]
 
-    padding = "=" * (
+    padding ="=" * (
         (4 - len(encoded) % 4) % 4
     )
 
@@ -404,121 +404,121 @@ def decrypt_text(text):
         return None
 
 
-UNLOCK_CODE = "everybody wants to rule the world"
-RESET_CODE = "reset puzzle"
+UNLOCK_CODE ="everybody wants to rule the world"
+RESET_CODE ="reset puzzle"
 CODES = {
 
-    "nos ossos que aqui estamos pelos vossos esperamos": {
-        "text": "You've found the first clue:\n\nWhere you now stand, seek words of Latin stone\nUpon this place, a secret waits alone\nLook up and find the message carved in bone\nAnd speak its meaning once the words are known",
-        "unlocks": ["melior est dies mortis die nativitatis"]
+   "nos ossos que aqui estamos pelos vossos esperamos": {
+       "text":"You've found the first clue:\n\nWhere you now stand, seek words of Latin stone\nUpon this place, a secret waits alone\nLook up and find the message carved in bone\nAnd speak its meaning once the words are known",
+       "unlocks": ["melior est dies mortis die nativitatis"]
     },
 
-    "melior est dies mortis die nativitatis":{
-        "text":"Sub palmā viridis fōns dēserta per arva clāret,\nFrīgida vallis habet dulcem relevāta ardōrem;\nMurmure dulcī aqua per saxa serēna sonāret,\nHīc viātor bibit et relinquit errorem.",
-        "unlocks": []
+   "melior est dies mortis die nativitatis":{
+       "text":"Sub palmā viridis fōns dēserta per arva clāret,\nFrīgida vallis habet dulcem relevāta ardōrem;\nMurmure dulcī aqua per saxa serēna sonāret,\nHīc viātor bibit et relinquit errorem.",
+       "unlocks": []
     }
 }
 START_UNLOCKED = ["nos ossos que aqui estamos pelos vossos esperamos"]
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET","POST"])
 def home():
 
-    if request.method == "POST":
+    if request.method =="POST":
 
         original = request.form["code"]
-        code = original.lower().replace(",", "").replace(".", "").replace("'","").replace(" ", "")
+        code = original.lower().replace(",","").replace(".","").replace("'","").replace("","")
 
-        locked = request.form.get("locked") == "true"
+        locked = request.form.get("locked") =="true"
 
         if locked and code == RESET_CODE.lower():
             return jsonify({
-                "type": "reset"
+               "type":"reset"
             })
 
         elif locked and code == UNLOCK_CODE.lower():
             return jsonify({
-                "type": "unlock"
+               "type":"unlock"
             })
 
-        elif code = "cromstronginhismountain":
+        elif code == "cromstronginhismountain":
             return jsonify({
-                "type": "lock"
+               "type":"lock"
             })
 
-        elif code == "hello":
+        elif code =="hello":
             return jsonify({
-                "type": "result",
-                "text": "Hello!"
+               "type":"result",
+               "text":"Hello!"
             })
         
-        elif code == "nooneintheworldevergetswhattheywantandthatisbeautiful":
+        elif code =="nooneintheworldevergetswhattheywantandthatisbeautiful":
             return jsonify({
-                "type": "decrypt",
-                "text": "everybody dies frustrated and sad\nbut that is beautiful"
+               "type":"decrypt",
+               "text":"everybody dies frustrated and sad\nbut that is beautiful"
             })
 
-        elif "867" in code and "5309" in code:
+        elif"867" in code and"5309" in code:
             return jsonify({
-                "type": "result",
-                "text": "Jenny, Jenny, here's my number:\n+447935307551\nNow I just need to make you mine..."
+               "type":"result",
+               "text":"Jenny, Jenny, here's my number:\n+447935307551\nNow I just need to make you mine..."
             })
         
         elif code in CODES:
-            unlocked = request.form.get("unlocked", "[]")
+            unlocked = request.form.get("unlocked","[]")
             unlocked = json.loads(unlocked)
 
             if code not in unlocked:
                 search = original
                 return jsonify({
-                    "type": "url",
-                    "url": "https://www.google.com/search?q=" + quote(search)
+                   "type":"url",
+                   "url":"https://www.google.com/search?q=" + quote(search)
                 })
 
             return jsonify({
-                "type": "code",
-                "text": CODES[code]["text"],
-                "unlocks": CODES[code]["unlocks"]
+               "type":"code",
+               "text": CODES[code]["text"],
+               "unlocks": CODES[code]["unlocks"]
             })
         
         # #secret commands
 
-        elif code == "whoami":
+        elif code =="whoami":
             return jsonify({
-                "type": "result",
-                "text": "IDENTITY: UNKNOWN\nACCESS LEVEL: RESTRICTED\nSESSION: ACTIVE"
+              "type":"result",
+              "text":"IDENTITY: UNKNOWN\nACCESS LEVEL: RESTRICTED\nSESSION: ACTIVE"
             })
 
-        elif code == "date":
+        elif code =="date":
             current_time = datetime.now(
                 ZoneInfo("Europe/London")
             )
 
             return jsonify({
-                "type": "result",
-                "text": current_time.strftime(
-                    "DATE: %d/%m/%Y\nTIME: %H:%M:%S\nTIMEZONE: Europe/London"
+              "type":"result",
+               "text": current_time.strftime(
+                   "DATE: %d/%m/%Y\nTIME: %H:%M:%S\nTIMEZONE: Europe/London"
                 )
             })
 
-        elif code == "about":
+        elif code =="about":
             return jsonify({
-                "type": "result",
-                "text": "MASTER LOCK\nVERSION: 3\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
+               "type":"result",
+               "text":"MASTER LOCK\nVERSION: 4\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
             })
         
                 # #encryption commands
 
-        elif code.startswith("encrypt "):
+        elif code.startswith("encrypt"):
 
             text = original[8:]
 
             return jsonify({
-                "type": "result",
-                "text": encrypt_text(text)
+               "type":"result",
+               "text": encrypt_text(text)
             })
 
 
-        elif code.startswith("decrypt "):
+        elif code.startswith("decrypt"):
 
             text = original[8:]
 
@@ -526,19 +526,19 @@ def home():
 
             if decrypted is None:
                 return jsonify({
-                    "type": "result",
-                    "text": "Invalid encryption code."
+                   "type":"result",
+                   "text":"Invalid encryption code."
                 })
 
             return jsonify({
-                "type": "result",
-                "text": decrypted
+               "type":"result",
+               "text": decrypted
             })
 
 
         # #cipher command
 
-        elif code.startswith("cipher "):
+        elif code.startswith("cipher"):
 
             text = original[7:]
 
@@ -555,237 +555,237 @@ def home():
                 if decrypted is None:
 
                     return jsonify({
-                        "type": "result",
-                        "text": "Invalid encryption code."
+                       "type":"result",
+                       "text":"Invalid encryption code."
                     })
 
                 return jsonify({
-                    "type": "result",
-                    "text": decrypted
+                   "type":"result",
+                   "text": decrypted
                 })
 
             # Otherwise encrypt it.
 
             return jsonify({
-                "type": "result",
-                "text": encrypt_text(text)
+               "type":"result",
+               "text": encrypt_text(text)
             })
         # #text commands
 
-        elif code.startswith("upper "):
+        elif code.startswith("upper"):
 
             text = original[6:]
 
             return jsonify({
-                "type": "result",
-                "text": text.upper()
+               "type":"result",
+               "text": text.upper()
             })
 
 
-        elif code.startswith("lower "):
+        elif code.startswith("lower"):
 
             text = original[6:]
 
             return jsonify({
-                "type": "result",
-                "text": text.lower()
+               "type":"result",
+               "text": text.lower()
             })
 
 
-        elif code.startswith("length "):
+        elif code.startswith("length"):
 
             text = original[7:]
 
             return jsonify({
-                "type": "result",
-                "text": str(len(text))
+               "type":"result",
+               "text": str(len(text))
             })
 
 
-        elif code.startswith("reverse "):
+        elif code.startswith("reverse"):
 
             text = original[8:]
 
             return jsonify({
-                "type": "result",
-                "text": text[::-1]
+               "type":"result",
+               "text": text[::-1]
             })
 
 
-        elif code.startswith("words "):
+        elif code.startswith("words"):
 
             text = original[6:]
 
             return jsonify({
-                "type": "result",
-                "text": str(len(text.split()))
+               "type":"result",
+               "text": str(len(text.split()))
             })
 
 
-        elif code.startswith("chars "):
+        elif code.startswith("chars"):
 
             text = original[6:]
 
             return jsonify({
-                "type": "result",
-                "text": str(len(text))
+               "type":"result",
+               "text": str(len(text))
             })
 
 
-        elif code.startswith("trim "):
+        elif code.startswith("trim"):
 
             text = original[5:]
 
             return jsonify({
-                "type": "result",
-                "text": text.strip()
+               "type":"result",
+               "text": text.strip()
             })
 
 
-        elif code.startswith("title "):
+        elif code.startswith("title"):
 
             text = original[6:]
 
             return jsonify({
-                "type": "result",
-                "text": text.title()
+               "type":"result",
+               "text": text.title()
             })
 
 
-        elif code.startswith("swap "):
+        elif code.startswith("swap"):
 
             text = original[5:]
 
             return jsonify({
-                "type": "result",
-                "text": text.swapcase()
+               "type":"result",
+               "text": text.swapcase()
             })
         
         # #binary command
-        elif code.startswith("binary "):
+        elif code.startswith("binary"):
             text = original[7:].strip()
             # Binary to text
             if text and all(
-                part in {"0", "1"}
-                for part in text.replace(" ", "")
+                part in {"0","1"}
+                for part in text.replace("","")
             ):
                 bits = text.split()
                 if all(len(part) == 8 for part in bits):
                     try:
-                        decoded = "".join(
+                        decoded ="".join(
                             chr(int(part, 2))
                             for part in bits
                         )
                         return jsonify({
-                            "type": "result",
-                            "text": decoded
+                           "type":"result",
+                           "text": decoded
                         })
                     except Exception:
                         pass
                     
             # Text to binary
-            binary = " ".join(
-                format(byte, "08b")
+            binary ="".join(
+                format(byte,"08b")
                 for byte in text.encode("utf-8")
             )
             return jsonify({
-                "type": "result",
-                "text": binary
+               "type":"result",
+               "text": binary
             })
         
-        elif code.startswith("yt "):
+        elif code.startswith("yt"):
             search = original[3:]
             return jsonify({
-                "type": "url",
-                "url": "https://www.youtube.com/results?search_query=" + quote(search)
+               "type":"url",
+               "url":"https://www.youtube.com/results?search_query=" + quote(search)
             })
-        elif code.startswith("youtube "):
+        elif code.startswith("youtube"):
             search = original[8:]
             return jsonify({
-                "type": "url",
-                "url": "https://www.youtube.com/results?search_query=" + quote(search)
+               "type":"url",
+               "url":"https://www.youtube.com/results?search_query=" + quote(search)
             })
 
-        elif code.startswith("startpage "):
+        elif code.startswith("startpage"):
             search = original[10:]
             return jsonify({
-                "type": "url",
-                "url": "https://www.startpage.com/sp/search?sc=a8mbuE7dTHEw7be6dlK4UDzyUn5QdqVb4ODUfz9WgPssushtzAgfGFuatzCa6KnFwG3MqZkGtyoMcBbTxbAiKgGRYBFIbdsTP&t=device&language=english&lui=english&segment=startpage.udog&abp=0&abd=0&abe=0&query=" + quote(search)
+               "type":"url",
+               "url":"https://www.startpage.com/sp/search?sc=a8mbuE7dTHEw7be6dlK4UDzyUn5QdqVb4ODUfz9WgPssushtzAgfGFuatzCa6KnFwG3MqZkGtyoMcBbTxbAiKgGRYBFIbdsTP&t=device&language=english&lui=english&segment=startpage.udog&abp=0&abd=0&abe=0&query=" + quote(search)
             })
         
-        elif code.startswith("wiki "):
+        elif code.startswith("wiki"):
             search = original[5:]
             return jsonify({
-                "type": "url",
-                "url": "https://en.wikipedia.org/wiki/Special:Search?search=" + quote(search)
+               "type":"url",
+               "url":"https://en.wikipedia.org/wiki/Special:Search?search=" + quote(search)
             })
 
-        elif code.startswith("g "):
+        elif code.startswith("g"):
             search = original[2:]
             return jsonify({
-                "type": "url",
-                "url": "https://www.google.com/search?q=" + quote(search)
+               "type":"url",
+               "url":"https://www.google.com/search?q=" + quote(search)
             })
-        elif code.startswith("bg "):
+        elif code.startswith("bg"):
             colour = get_colour(original[3:])
             if colour:
                 return jsonify({
-                    "type": "css",
-                    "target": "bg",
-                    "value": colour
+                   "type":"css",
+                   "target":"bg",
+                   "value": colour
                 })
             return jsonify({
-                "type": "result",
-                "text": "Invalid background colour."
+               "type":"result",
+               "text":"Invalid background colour."
             })
 
 
-        elif code.startswith("text "):
+        elif code.startswith("text"):
             colour = get_colour(original[5:])
             if colour:
                 return jsonify({
-                    "type": "css",
-                    "target": "text",
-                    "value": colour
+                   "type":"css",
+                   "target":"text",
+                   "value": colour
                 })
             return jsonify({
-                "type": "result",
-                "text": "Invalid text colour."
+               "type":"result",
+               "text":"Invalid text colour."
             })
         
-        elif code.startswith("btn "):
+        elif code.startswith("btn"):
             colour = get_colour(original[4:])
             if colour:
                 return jsonify({
-                    "type": "css",
-                    "target": "btn",
-                    "value": colour
+                   "type":"css",
+                   "target":"btn",
+                   "value": colour
                 })
 
             return jsonify({
-                "type": "result",
-                "text": "Invalid button colour."
+               "type":"result",
+               "text":"Invalid button colour."
             })
 
 
-        elif code.startswith("input "):
+        elif code.startswith("input"):
             colour = get_colour(original[6:])
             if colour:
                 return jsonify({
-                    "type": "css",
-                    "target": "input",
-                    "value": colour
+                   "type":"css",
+                   "target":"input",
+                   "value": colour
                 })
 
             return jsonify({
-                "type": "result",
-                "text": "Invalid input colour."
+               "type":"result",
+               "text":"Invalid input colour."
             })
 
         else:
             return jsonify({
-                "type": "url",
-                "url": "https://www.google.com/search?q=" + quote(original)
+               "type":"url",
+               "url":"https://www.google.com/search?q=" + quote(original)
             })
 
     return render_template("index.html")
