@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 22
+version = 23
 
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
@@ -584,7 +584,7 @@ def home():
                "text":"everybody dies frustrated and sad\nand that is beautiful"
             })
 
-        elif "867" in code and "5309" in code:
+        elif code = "8675309":
             return jsonify({
                "type":"result",
                "text":"Jenny, Jenny, here's my number:\n+447935307551\nNow I just need to make you mine..."
