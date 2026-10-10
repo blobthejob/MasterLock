@@ -7,6 +7,8 @@ import re
 import json
 import base64
 import random
+import ast
+import operator
 
 COLOURS = {
    "black":"black",
@@ -33,8 +35,54 @@ def get_colour(value):
 app = Flask(__name__)
 
 #<==========VERSION==========>
-version = 17
+version = 18
 
+
+# Safe calculator
+def calculate_expression(expression):
+    operations = {
+        ast.Add: operator.add,
+        ast.Sub: operator.sub,
+        ast.Mult: operator.mul,
+        ast.Div: operator.truediv,
+        ast.FloorDiv: operator.floordiv,
+        ast.Mod: operator.mod,
+        ast.Pow: operator.pow,
+    }
+
+    def calculate(node):
+        if isinstance(node, ast.Expression):
+            return calculate(node.body)
+
+        if isinstance(node, ast.Constant):
+            if type(node.value) in (int, float):
+                return node.value
+            raise ValueError("Only numbers are allowed.")
+
+        if isinstance(node, ast.BinOp):
+            operation = operations.get(type(node.op))
+
+            if operation is None:
+                raise ValueError("Unsupported operation.")
+            left = calculate(node.left)
+            right = calculate(node.right)
+            if isinstance(node.op, ast.Pow):
+                if abs(right) > 100 or abs(left) > 1e100:
+                    raise ValueError("Calculation too large.")
+            result = operation(left, right)
+            if isinstance(result, (int, float)):
+                if abs(result) > 1e100:
+                    raise ValueError("Result too large.")
+            return result
+        if isinstance(node, ast.UnaryOp):
+            value = calculate(node.operand)
+            if isinstance(node.op, ast.UAdd):
+                return value
+            if isinstance(node.op, ast.USub):
+                return -value
+        raise ValueError("Invalid calculation.")
+    tree = ast.parse(expression, mode="eval")
+    return calculate(tree)
 
 # #cipher variants
 
@@ -458,6 +506,9 @@ def home():
             "btn",
             "input",
             "yt",
+            "calc",
+            "random",
+            "translate",
         ]
 
         code = re.sub(r"[^a-z0-9: ]", "", original.lower())
@@ -579,6 +630,168 @@ def home():
             return jsonify({
                "type":"result",
                "text":"MASTER LOCK\nVERSION: "+str(version)+"\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
+            })
+        
+        # Calculator
+
+        elif code.startswith("calc "):
+
+            expression = original[5:].strip()
+
+            try:
+                answer = calculate_expression(expression)
+
+                return jsonify({
+                    "type": "result",
+                    "text": str(answer)
+                })
+
+            except (ValueError, SyntaxError, ZeroDivisionError,
+                    OverflowError) as error:
+
+                return jsonify({
+                    "type": "result",
+                    "text": "Calculation error: " + str(error)
+                })
+
+
+        # Random tools
+
+        elif code == "random coin":
+
+            return jsonify({
+                "type": "result",
+                "text": random.choice(["Heads", "Tails"])
+            })
+
+        elif code == "random dice":
+
+            return jsonify({
+                "type": "result",
+                "text": str(random.randint(1, 6))
+            })
+
+        elif code.startswith("random choice "):
+
+            options_text = original[14:].strip()
+
+            options = [
+                option.strip()
+                for option in options_text.split(",")
+                if option.strip()
+            ]
+
+            if not options:
+                return jsonify({
+                    "type": "result",
+                    "text": "Usage: random choice red, blue, green"
+                })
+
+            return jsonify({
+                "type": "result",
+                "text": random.choice(options)
+            })
+
+        elif code.startswith("random "):
+
+            numbers = re.fullmatch(
+                r"random\s+(-?\d+)\s+(?:to\s+)?(-?\d+)",
+                original,
+                re.IGNORECASE
+            )
+
+            if numbers:
+
+                minimum = int(numbers.group(1))
+                maximum = int(numbers.group(2))
+
+                if minimum > maximum:
+                    minimum, maximum = maximum, minimum
+
+                return jsonify({
+                    "type": "result",
+                    "text": str(random.randint(minimum, maximum))
+                })
+
+            return jsonify({
+                "type": "result",
+                "text": (
+                    "Random commands:\n"
+                    "random 1 100\n"
+                    "random coin\n"
+                    "random dice\n"
+                    "random choice red, blue, green"
+                )
+            })
+
+
+        # Translation
+
+        elif code.startswith("translate "):
+
+            match = re.fullmatch(
+                r"translate\s+(.+?)\s+to\s+([a-z -]+)",
+                original,
+                re.IGNORECASE
+            )
+
+            languages = {
+                "english": "en",
+                "french": "fr",
+                "spanish": "es",
+                "german": "de",
+                "italian": "it",
+                "portuguese": "pt",
+                "dutch": "nl",
+                "polish": "pl",
+                "russian": "ru",
+                "japanese": "ja",
+                "chinese": "zh-CN",
+                "korean": "ko",
+                "arabic": "ar",
+                "welsh": "cy",
+                "latin": "la",
+                "hindi": "hi",
+                "greek": "el",
+                "turkish": "tr",
+                "swedish": "sv",
+                "ukrainian": "uk",
+            }
+
+            if not match:
+                return jsonify({
+                    "type": "result",
+                    "text": (
+                        "Usage: translate hello to french"
+                    )
+                })
+
+            text_to_translate = match.group(1).strip()
+            language = match.group(2).strip().lower()
+
+            language_code = languages.get(language)
+
+            if not language_code:
+                return jsonify({
+                    "type": "result",
+                    "text": (
+                        "Unknown language. Try: French, Spanish, "
+                        "German, Welsh, Latin, Japanese or another "
+                        "supported language."
+                    )
+                })
+
+            translation_url = (
+                "https://translate.google.com/?sl=auto&tl="
+                + quote(language_code)
+                + "&text="
+                + quote(text_to_translate)
+                + "&op=translate"
+            )
+
+            return jsonify({
+                "type": "url",
+                "url": translation_url
             })
         
                 # #encryption commands
