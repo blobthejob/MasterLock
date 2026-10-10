@@ -5,6 +5,9 @@ from zoneinfo import ZoneInfo
 from difflib import get_close_matches
 import re
 import json
+import base64
+import random
+
 COLOURS = {
    "black":"black",
    "white":"white",
@@ -19,7 +22,6 @@ COLOURS = {
    "grey":"gray",
    "cyan":"cyan"
 }
-
 def get_colour(value):
     value = value.strip().lower()
     if value in COLOURS:
@@ -30,11 +32,8 @@ def get_colour(value):
 
 app = Flask(__name__)
 
-
-# #encryption
-
-import base64
-import random
+#<==========VERSION==========>
+    version = 12
 
 
 # #cipher variants
@@ -426,28 +425,43 @@ def home():
 
     if request.method =="POST":
 
-        original = request.form["code"]
-        code = original.lower().replace(",","").replace(".","").replace("'","").replace(" ","").replace("?","").replace("!","").replace("<","").replace(">","")     
-        # Commands allowed to use typo correction
+        original = request.form["code"].strip()
+
+        code = re.sub(r"[^a-z0-9:]", "", original.lower())
+
+        # #commands that allow typo correction
+
         TYPO_TOLERANT_COMMANDS = [
             "hello",
             "whoami",
             "date",
             "about",
-            "sudo",
+            "cipher",
+            "upper",
+            "lower",
+            "length",
+            "reverse",
+            "words",
+            "chars",
+            "trim",
+            "title",
+            "swap",
+            "binary",
         ]
 
-        # Correct a likely typo without affecting normal searches
+        # #correct likely typos
+
         if code not in TYPO_TOLERANT_COMMANDS:
             matches = get_close_matches(
                 code,
                 TYPO_TOLERANT_COMMANDS,
                 n=1,
-                cutoff=0.68
+                cutoff=0.65
             )
 
             if matches:
                 code = matches[0]
+        
         locked = request.form.get("locked") =="true"
 
         if locked and code == RESET_CODE.lower():
@@ -477,7 +491,7 @@ def home():
                "text":"everybody dies frustrated and sad\nand that is beautiful"
             })
 
-        elif"867" in code and"5309" in code:
+        elif "867" in code and"5309" in code:
             return jsonify({
                "type":"result",
                "text":"Jenny, Jenny, here's my number:\n+447935307551\nNow I just need to make you mine..."
@@ -523,7 +537,7 @@ def home():
         elif code =="about":
             return jsonify({
                "type":"result",
-               "text":"MASTER LOCK\nVERSION: 11\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
+               "text":"MASTER LOCK\nVERSION: "+str(version)+"\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
             })
         
                 # #encryption commands
