@@ -33,7 +33,7 @@ def get_colour(value):
 app = Flask(__name__)
 
 #<==========VERSION==========>
-version = 14
+version = 15
 
 
 # #cipher variants
@@ -498,7 +498,7 @@ def home():
 
                         # Rebuild the normalised input after correction
                         code = re.sub(
-                            r"[^a-z0-9:]",
+                            r"[^a-z0-9: ]",
                             "",
                             original.lower()
                         )
