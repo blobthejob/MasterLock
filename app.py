@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 34
+version = 35
 
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote

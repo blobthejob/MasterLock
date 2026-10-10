@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 9;
+        const HTML_VERSION = 10;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -163,6 +163,43 @@
     margin: 20px 0;
 }
 
+
+/* #drawing menu */
+
+#drawMenu {
+    margin: 20px auto;
+    padding: 15px;
+    max-width: 1000px;
+    box-sizing: border-box;
+    color: white;
+}
+
+#drawMenu h2 {
+    margin-bottom: 12px;
+}
+
+#drawStatus {
+    margin: 12px 0;
+    font-size: 18px;
+    color: white;
+}
+
+#drawCanvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: white;
+    border: 2px solid #555;
+    box-sizing: border-box;
+    touch-action: none;
+    cursor: crosshair;
+}
+
+#drawMenu p {
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
     </style>
 </head>
 
@@ -190,6 +227,23 @@
 
         <div id="result" class="result"></div>
 
+<!-- #drawing menu -->
+<div id="drawMenu" style="display: none;">
+
+    <h2>DRAWING MODE</h2>
+
+    <p id="drawStatus">Tool: pen | Colour: black | Size: 5</p>
+
+    <canvas id="drawCanvas" width="1000" height="600"></canvas>
+
+    <p>
+        Commands: color red, fill blue, tool eraser,
+        tool line, tool rectangle, tool circle, size 5,
+        clear drawing, save drawing, exit draw
+    </p>
+
+</div>
+
     </div>
 
 
@@ -215,6 +269,366 @@
 
 
 <script>
+
+/* #drawing system */
+
+const drawMenu = document.getElementById("drawMenu");
+const drawCanvas = document.getElementById("drawCanvas");
+const drawStatus = document.getElementById("drawStatus");
+const drawContext = drawCanvas.getContext("2d");
+
+let drawingOpen = false;
+let drawingActive = false;
+let drawingTool = "pen";
+let drawingColour = "black";
+let drawingSize = 5;
+let drawStart = null;
+let drawSnapshot = null;
+
+// Set a white background
+function initialiseDrawing() {
+    drawContext.fillStyle = "white";
+    drawContext.fillRect(
+        0, 0, drawCanvas.width, drawCanvas.height
+    );
+}
+
+initialiseDrawing();
+
+function updateDrawStatus() {
+    drawStatus.textContent =
+        "Tool: " + drawingTool +
+        " | Colour: " + drawingColour +
+        " | Size: " + drawingSize;
+}
+
+function openDrawMenu() {
+    drawingOpen = true;
+    drawMenu.style.display = "block";
+    updateDrawStatus();
+    result.textContent = "Drawing mode opened.";
+}
+
+function closeDrawMenu() {
+    drawingOpen = false;
+    drawingActive = false;
+    drawMenu.style.display = "none";
+    result.textContent = "Drawing mode closed.";
+}
+
+function setDrawingColour(colour, tool) {
+    if (!CSS.supports("color", colour)) {
+        result.textContent = "Unknown colour: " + colour;
+        return;
+    }
+
+    drawingColour = colour;
+    drawingTool = tool;
+    updateDrawStatus();
+    result.textContent =
+        "Colour set to " + colour + ". Tool: " + tool;
+}
+
+function getCanvasPoint(event) {
+    const bounds = drawCanvas.getBoundingClientRect();
+
+    return {
+        x: (event.clientX - bounds.left) *
+            drawCanvas.width / bounds.width,
+        y: (event.clientY - bounds.top) *
+            drawCanvas.height / bounds.height
+    };
+}
+
+function drawShape(point) {
+    drawContext.beginPath();
+    drawContext.strokeStyle = drawingColour;
+    drawContext.lineWidth = drawingSize;
+    drawContext.lineCap = "round";
+    drawContext.lineJoin = "round";
+
+    if (drawingTool === "line") {
+        drawContext.moveTo(drawStart.x, drawStart.y);
+        drawContext.lineTo(point.x, point.y);
+    }
+
+    if (drawingTool === "rectangle") {
+        drawContext.rect(
+            drawStart.x,
+            drawStart.y,
+            point.x - drawStart.x,
+            point.y - drawStart.y
+        );
+    }
+
+    if (drawingTool === "circle") {
+        const dx = point.x - drawStart.x;
+        const dy = point.y - drawStart.y;
+        const radius = Math.sqrt(dx * dx + dy * dy);
+
+        drawContext.arc(
+            drawStart.x,
+            drawStart.y,
+            radius,
+            0,
+            Math.PI * 2
+        );
+    }
+
+    drawContext.stroke();
+}
+
+// Flood fill for enclosed areas
+function floodFill(x, y) {
+    const width = drawCanvas.width;
+    const height = drawCanvas.height;
+
+    const startX = Math.floor(x);
+    const startY = Math.floor(y);
+
+    if (
+        startX < 0 || startX >= width ||
+        startY < 0 || startY >= height
+    ) {
+        return;
+    }
+
+    const image = drawContext.getImageData(
+        0, 0, width, height
+    );
+
+    const pixels = image.data;
+    const startIndex = (startY * width + startX) * 4;
+
+    const target = [
+        pixels[startIndex],
+        pixels[startIndex + 1],
+        pixels[startIndex + 2],
+        pixels[startIndex + 3]
+    ];
+
+    const colourCanvas = document.createElement("canvas");
+    colourCanvas.width = 1;
+    colourCanvas.height = 1;
+
+    const colourContext = colourCanvas.getContext("2d");
+    colourContext.fillStyle = drawingColour;
+    colourContext.fillRect(0, 0, 1, 1);
+
+    const replacement = colourContext.getImageData(0, 0, 1, 1).data;
+
+    if (
+        target[0] === replacement[0] &&
+        target[1] === replacement[1] &&
+        target[2] === replacement[2] &&
+        target[3] === 255
+    ) {
+        return;
+    }
+
+    const total = width * height;
+    const visited = new Uint8Array(total);
+    const stack = new Int32Array(total);
+    let stackSize = 0;
+
+    stack[stackSize++] = startY * width + startX;
+    visited[startY * width + startX] = 1;
+
+    while (stackSize > 0) {
+        const pixel = stack[--stackSize];
+        const px = pixel % width;
+        const py = Math.floor(pixel / width);
+        const index = pixel * 4;
+
+        const matches =
+            Math.abs(pixels[index] - target[0]) <= 30 &&
+            Math.abs(pixels[index + 1] - target[1]) <= 30 &&
+            Math.abs(pixels[index + 2] - target[2]) <= 30 &&
+            Math.abs(pixels[index + 3] - target[3]) <= 30;
+
+        if (!matches) continue;
+
+        pixels[index] = replacement[0];
+        pixels[index + 1] = replacement[1];
+        pixels[index + 2] = replacement[2];
+        pixels[index + 3] = 255;
+
+        const neighbours = [
+            px > 0 ? pixel - 1 : -1,
+            px < width - 1 ? pixel + 1 : -1,
+            py > 0 ? pixel - width : -1,
+            py < height - 1 ? pixel + width : -1
+        ];
+
+        for (const next of neighbours) {
+            if (next !== -1 && !visited[next]) {
+                visited[next] = 1;
+                stack[stackSize++] = next;
+            }
+        }
+    }
+
+    drawContext.putImageData(image, 0, 0);
+}
+
+drawCanvas.addEventListener("pointerdown", event => {
+    if (!drawingOpen) return;
+
+    event.preventDefault();
+
+    const point = getCanvasPoint(event);
+
+    if (drawingTool === "fill") {
+        floodFill(point.x, point.y);
+        return;
+    }
+
+    drawingActive = true;
+    drawStart = point;
+
+    if (
+        drawingTool === "line" ||
+        drawingTool === "rectangle" ||
+        drawingTool === "circle"
+    ) {
+        drawSnapshot = drawContext.getImageData(
+            0, 0, drawCanvas.width, drawCanvas.height
+        );
+        return;
+    }
+
+    drawContext.beginPath();
+    drawContext.moveTo(point.x, point.y);
+    drawContext.lineWidth = drawingSize;
+    drawContext.lineCap = "round";
+    drawContext.lineJoin = "round";
+    drawContext.strokeStyle =
+        drawingTool === "eraser" ? "white" : drawingColour;
+
+    drawCanvas.setPointerCapture(event.pointerId);
+});
+
+drawCanvas.addEventListener("pointermove", event => {
+    if (!drawingActive) return;
+
+    event.preventDefault();
+
+    const point = getCanvasPoint(event);
+
+    if (
+        drawingTool === "line" ||
+        drawingTool === "rectangle" ||
+        drawingTool === "circle"
+    ) {
+        drawContext.putImageData(drawSnapshot, 0, 0);
+        drawShape(point);
+        return;
+    }
+
+    drawContext.lineTo(point.x, point.y);
+    drawContext.stroke();
+});
+
+function finishDrawing(event) {
+    if (!drawingActive) return;
+
+    if (
+        drawingTool === "line" ||
+        drawingTool === "rectangle" ||
+        drawingTool === "circle"
+    ) {
+        drawContext.putImageData(drawSnapshot, 0, 0);
+        drawShape(getCanvasPoint(event));
+    }
+
+    drawingActive = false;
+    drawStart = null;
+    drawSnapshot = null;
+    drawContext.beginPath();
+}
+
+drawCanvas.addEventListener("pointerup", finishDrawing);
+drawCanvas.addEventListener("pointercancel", finishDrawing);
+
+// Commands handled locally without contacting the server
+function handleDrawCommand(command) {
+    const text = command.trim().toLowerCase();
+
+    if (text === "draw") {
+        openDrawMenu();
+        return true;
+    }
+
+    if (!drawingOpen) return false;
+
+    if (text === "exit draw") {
+        closeDrawMenu();
+        return true;
+    }
+
+    if (text === "save drawing") {
+        const link = document.createElement("a");
+        link.download = "master-lock-drawing.png";
+        link.href = drawCanvas.toDataURL("image/png");
+        link.click();
+
+        result.textContent = "Drawing saved as a PNG.";
+        return true;
+    }
+
+    if (text === "clear drawing") {
+        initialiseDrawing();
+        result.textContent = "Canvas cleared.";
+        return true;
+    }
+
+    const colourCommand = text.match(/^color\s+(.+)$/);
+
+    if (colourCommand) {
+        setDrawingColour(colourCommand[1], "pen");
+        return true;
+    }
+
+    const fillCommand = text.match(/^fill\s+(.+)$/);
+
+    if (fillCommand) {
+        setDrawingColour(fillCommand[1], "fill");
+        return true;
+    }
+
+    const toolCommand = text.match(/^tool\s+(pen|eraser|line|rectangle|circle|fill)$/);
+
+    if (toolCommand) {
+        drawingTool = toolCommand[1];
+        updateDrawStatus();
+        result.textContent = "Tool changed to " + drawingTool + ".";
+        return true;
+    }
+
+    const sizeCommand = text.match(/^size\s+(\d+)$/);
+
+    if (sizeCommand) {
+        const size = Number(sizeCommand[1]);
+
+        if (size < 1 || size > 50) {
+            result.textContent = "Brush size must be between 1 and 50.";
+        } else {
+            drawingSize = size;
+            updateDrawStatus();
+            result.textContent = "Brush size set to " + size + ".";
+        }
+
+        return true;
+    }
+
+    result.textContent =
+        "Unknown drawing command. Try color red, fill blue, " +
+        "tool eraser, tool line, tool rectangle, tool circle, " +
+        "size 5, clear drawing, save drawing or exit draw.";
+
+    return true;
+}
+
 
 const form = document.getElementById("commandForm");
 const input = document.getElementById("code");
@@ -482,6 +896,12 @@ form.addEventListener("submit", async event => {
     }
 
     result.textContent = "";
+
+    // #drawing commands
+    if (handleDrawCommand(submittedCommand)) {
+        input.value = "";
+        return;
+    }
 
     const enteredCode = input.value.trim().toLowerCase();
 
