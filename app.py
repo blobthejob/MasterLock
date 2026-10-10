@@ -33,7 +33,7 @@ def get_colour(value):
 app = Flask(__name__)
 
 #<==========VERSION==========>
-    version = 12
+    version = 14
 
 
 # #cipher variants
@@ -404,32 +404,33 @@ def decrypt_text(text):
         return None
 
 
-UNLOCK_CODE ="everybodywantstoruletheworld"
-RESET_CODE ="resetpuzzle"
+UNLOCK_CODE ="everybody wants to rule the world"
+RESET_CODE ="reset puzzle"
 CODES = {
 
-   "nosossosqueaquiestamospelosvossosesperamos": {
+   "nos ossos que aqui estamos, pelos vossos esperamos": {
        "text":"You've found the first clue:\n\nWhere you now stand, seek words of Latin stone\nUpon this place, a secret waits alone\nLook up and find the message carved in bone\nAnd speak its meaning once the words are known",
-       "unlocks": ["meliorestdiesmortisdienativitatis"]
+       "unlocks": ["melior est dies mortis die nativitatis"]
     },
 
-   "meliorestdiesmortisdienativitatis":{
+   "melior est dies mortis die nativitatis":{
        "text":"Sub palmā viridis fōns dēserta per arva clāret,\nFrīgida vallis habet dulcem relevāta ardōrem;\nMurmure dulcī aqua per saxa serēna sonāret,\nHīc viātor bibit et relinquit errorem.",
        "unlocks": []
     }
 }
-START_UNLOCKED = ["nosossosqueaquiestamospelosvossosesperamos"]
+START_UNLOCKED = ["nos ossos que aqui estamos, pelos vossos esperamos"]
 
 @app.route("/", methods=["GET","POST"])
 def home():
 
     if request.method =="POST":
 
+                
+        # #prepare command
+
         original = request.form["code"].strip()
 
-        code = re.sub(r"[^a-z0-9:]", "", original.lower())
-
-        # #commands that allow typo correction
+        # #commands allowed to use typo correction
 
         TYPO_TOLERANT_COMMANDS = [
             "hello",
@@ -437,6 +438,8 @@ def home():
             "date",
             "about",
             "cipher",
+            "encrypt",
+            "decrypt",
             "upper",
             "lower",
             "length",
@@ -447,20 +450,58 @@ def home():
             "title",
             "swap",
             "binary",
+            "youtube",
+            "startpage",
+            "wiki",
+            "bg",
+            "text",
+            "btn",
+            "input",
+            "yt",
         ]
 
-        # #correct likely typos
+        code = re.sub(r"[^a-z0-9: ]", "", original.lower())
+        compact_commands = [
+            command for command in TYPO_TOLERANT_COMMANDS
+            if len(command) >= 3
+        ]
+        already_valid = any(
+            code.startswith(command)
+            for command in TYPO_TOLERANT_COMMANDS
+        )
 
-        if code not in TYPO_TOLERANT_COMMANDS:
-            matches = get_close_matches(
-                code,
-                TYPO_TOLERANT_COMMANDS,
-                n=1,
-                cutoff=0.65
+        if not already_valid:
+            command_match = re.match(
+                r"^([a-z]+)(?=\s|$)",
+                original,
+                re.IGNORECASE
             )
 
-            if matches:
-                code = matches[0]
+            if command_match:
+                typed_command = command_match.group(1).lower()
+
+                if len(typed_command) >= 3:
+                    matches = get_close_matches(
+                        typed_command,
+                        compact_commands,
+                        n=1,
+                        cutoff=0.65
+                    )
+
+                    if matches:
+                        corrected_command = matches[0]
+
+                        original = (
+                            corrected_command
+                            + original[len(typed_command):]
+                        )
+
+                        # Rebuild the normalised input after correction
+                        code = re.sub(
+                            r"[^a-z0-9:]",
+                            "",
+                            original.lower()
+                        )
         
         locked = request.form.get("locked") =="true"
 
@@ -474,7 +515,7 @@ def home():
                "type":"unlock"
             })
 
-        elif code == "cromstrongonhismountain":
+        elif code == "crom strong on his mountain":
             return jsonify({
                "type":"lock"
             })
@@ -485,13 +526,13 @@ def home():
                "text":"Hello!"
             })
         
-        elif code =="nooneintheworldevergetswhattheywantandthatisbeautiful":
+        elif code =="no one in th eworld ever gets what they want and that is beautiful":
             return jsonify({
                "type":"decrypt",
                "text":"everybody dies frustrated and sad\nand that is beautiful"
             })
 
-        elif "867" in code and"5309" in code:
+        elif "867" in code and "5309" in code:
             return jsonify({
                "type":"result",
                "text":"Jenny, Jenny, here's my number:\n+447935307551\nNow I just need to make you mine..."
@@ -516,7 +557,7 @@ def home():
         
         # #secret commands
 
-        elif code =="whoami":
+        elif code =="who am i":
             return jsonify({
               "type":"result",
               "text":"IDENTITY: UNKNOWN\nACCESS LEVEL: RESTRICTED\nSESSION: ACTIVE"
@@ -542,9 +583,9 @@ def home():
         
                 # #encryption commands
 
-        elif code.startswith("encrypt"):
+        elif code.startswith("encrypt "):
 
-            text = original[7:]
+            text = original[8:]
 
             return jsonify({
                "type":"result",
@@ -552,9 +593,9 @@ def home():
             })
 
 
-        elif code.startswith("decrypt"):
+        elif code.startswith("decrypt "):
 
-            text = original[7:]
+            text = original[8:]
 
             decrypted = decrypt_text(text)
 
@@ -572,9 +613,9 @@ def home():
 
         # #cipher command
 
-        elif code.startswith("cipher"):
+        elif code.startswith("cipher "):
 
-            text = original[6:]
+            text = original[7:]
 
             # If it already has one of the known prefixes,
             # decrypt it.
@@ -606,9 +647,9 @@ def home():
             })
         # #text commands
 
-        elif code.startswith("upper"):
+        elif code.startswith("upper "):
 
-            text = original[5:]
+            text = original[6:]
 
             return jsonify({
                "type":"result",
@@ -616,9 +657,9 @@ def home():
             })
 
 
-        elif code.startswith("lower"):
+        elif code.startswith("lower "):
 
-            text = original[5:]
+            text = original[6:]
 
             return jsonify({
                "type":"result",
@@ -626,7 +667,37 @@ def home():
             })
 
 
-        elif code.startswith("length"):
+        elif code.startswith("length "):
+
+            text = original[7:]
+
+            return jsonify({
+               "type":"result",
+               "text": str(len(text))
+            })
+
+
+        elif code.startswith("reverse "):
+
+            text = original[8:]
+
+            return jsonify({
+               "type":"result",
+               "text": text[::-1]
+            })
+
+
+        elif code.startswith("words "):
+
+            text = original[6:]
+
+            return jsonify({
+               "type":"result",
+               "text": str(len(text.split()))
+            })
+
+
+        elif code.startswith("chars "):
 
             text = original[6:]
 
@@ -636,39 +707,9 @@ def home():
             })
 
 
-        elif code.startswith("reverse"):
-
-            text = original[7:]
-
-            return jsonify({
-               "type":"result",
-               "text": text[::-1]
-            })
-
-
-        elif code.startswith("words"):
+        elif code.startswith("trim "):
 
             text = original[5:]
-
-            return jsonify({
-               "type":"result",
-               "text": str(len(text.split()))
-            })
-
-
-        elif code.startswith("chars"):
-
-            text = original[5:]
-
-            return jsonify({
-               "type":"result",
-               "text": str(len(text))
-            })
-
-
-        elif code.startswith("trim"):
-
-            text = original[4:]
 
             return jsonify({
                "type":"result",
@@ -676,9 +717,9 @@ def home():
             })
 
 
-        elif code.startswith("title"):
+        elif code.startswith("title "):
 
-            text = original[5:]
+            text = original[6:]
 
             return jsonify({
                "type":"result",
@@ -686,9 +727,9 @@ def home():
             })
 
 
-        elif code.startswith("swap"):
+        elif code.startswith("swap "):
 
-            text = original[4:]
+            text = original[5:]
 
             return jsonify({
                "type":"result",
@@ -696,8 +737,8 @@ def home():
             })
         
         # #binary command
-        elif code.startswith("binary"):
-            text = original[6:].strip()
+        elif code.startswith("binary "):
+            text = original[7:].strip()
             # Binary to text
             if text and all(
                 part in {"0","1"}
@@ -727,41 +768,41 @@ def home():
                "text": binary
             })
         
-        elif code.startswith("yt"):
-            search = original[2:]
+        elif code.startswith("yt "):
+            search = original[3:]
             return jsonify({
                "type":"url",
                "url":"https://www.youtube.com/results?search_query=" + quote(search)
             })
-        elif code.startswith("youtube"):
-            search = original[7:]
+        elif code.startswith("youtube "):
+            search = original[8:]
             return jsonify({
                "type":"url",
                "url":"https://www.youtube.com/results?search_query=" + quote(search)
             })
 
-        elif code.startswith("startpage"):
-            search = original[9:]
+        elif code.startswith("startpage "):
+            search = original[10:]
             return jsonify({
                "type":"url",
                "url":"https://www.startpage.com/sp/search?sc=a8mbuE7dTHEw7be6dlK4UDzyUn5QdqVb4ODUfz9WgPssushtzAgfGFuatzCa6KnFwG3MqZkGtyoMcBbTxbAiKgGRYBFIbdsTP&t=device&language=english&lui=english&segment=startpage.udog&abp=0&abd=0&abe=0&query=" + quote(search)
             })
         
-        elif code.startswith("wiki"):
-            search = original[4:]
+        elif code.startswith("wiki "):
+            search = original[5:]
             return jsonify({
                "type":"url",
                "url":"https://en.wikipedia.org/wiki/Special:Search?search=" + quote(search)
             })
 
-        elif code.startswith("g"):
-            search = original[1:]
+        elif code.startswith("g "):
+            search = original[2:]
             return jsonify({
                "type":"url",
                "url":"https://www.google.com/search?q=" + quote(search)
             })
-        elif code.startswith("bg"):
-            colour = get_colour(original[2:])
+        elif code.startswith("bg "):
+            colour = get_colour(original[3:])
             if colour:
                 return jsonify({
                    "type":"css",
@@ -774,8 +815,8 @@ def home():
             })
 
 
-        elif code.startswith("text"):
-            colour = get_colour(original[4:])
+        elif code.startswith("text "):
+            colour = get_colour(original[5:])
             if colour:
                 return jsonify({
                    "type":"css",
@@ -787,8 +828,8 @@ def home():
                "text":"Invalid text colour."
             })
         
-        elif code.startswith("btn"):
-            colour = get_colour(original[3:])
+        elif code.startswith("btn "):
+            colour = get_colour(original[4:])
             if colour:
                 return jsonify({
                    "type":"css",
@@ -802,8 +843,8 @@ def home():
             })
 
 
-        elif code.startswith("input"):
-            colour = get_colour(original[5:])
+        elif code.startswith("input "):
+            colour = get_colour(original[6:])
             if colour:
                 return jsonify({
                    "type":"css",
