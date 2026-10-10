@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 26
+version = 27
 
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
@@ -86,6 +86,63 @@ def calculate_expression(expression):
     tree = ast.parse(expression, mode="eval")
     return calculate(tree)
 
+
+# Format algebraic terms
+
+def format_number(number):
+    if abs(number - round(number)) < 1e-9:
+        return str(int(round(number)))
+    return f"{number:g}"
+
+
+def format_term(coefficient, variable, constant):
+    parts = []
+
+    if coefficient != 0:
+        if coefficient == 1:
+            parts.append(variable)
+        elif coefficient == -1:
+            parts.append("-" + variable)
+        else:
+            parts.append(format_number(coefficient) + variable)
+
+    if constant != 0:
+        if not parts:
+            parts.append(format_number(constant))
+        else:
+            sign = "+" if constant > 0 else "-"
+            parts.append(sign + " " + format_number(abs(constant)))
+
+    return " ".join(parts) if parts else "0"
+
+
+def format_quadratic(a, b, c):
+    parts = []
+
+    if a != 0:
+        if a == 1:
+            parts.append("n^2")
+        elif a == -1:
+            parts.append("-n^2")
+        else:
+            parts.append(format_number(a) + "n^2")
+
+    if b != 0:
+        sign = "+" if b > 0 else "-"
+        coefficient = abs(b)
+
+        if coefficient == 1:
+            term = "n"
+        else:
+            term = format_number(coefficient) + "n"
+
+        parts.append(sign + " " + term)
+
+    if c != 0:
+        sign = "+" if c > 0 else "-"
+        parts.append(sign + " " + format_number(abs(c)))
+
+    return " ".join(parts) if parts else "0"
 # maths commands
 
 def calculate_maths(command):
