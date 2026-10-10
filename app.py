@@ -440,7 +440,7 @@ def home():
                "type":"unlock"
             })
 
-        elif code == "cromstronginhismountain":
+        elif code == "cromstrongonhismountain":
             return jsonify({
                "type":"lock"
             })
@@ -454,7 +454,7 @@ def home():
         elif code =="nooneintheworldevergetswhattheywantandthatisbeautiful":
             return jsonify({
                "type":"decrypt",
-               "text":"everybody dies frustrated and sad\nbut that is beautiful"
+               "text":"everybody dies frustrated and sad\nand that is beautiful"
             })
 
         elif"867" in code and"5309" in code:
@@ -503,7 +503,7 @@ def home():
         elif code =="about":
             return jsonify({
                "type":"result",
-               "text":"MASTER LOCK\nVERSION: 8\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
+               "text":"MASTER LOCK\nVERSION: 10\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
             })
         
                 # #encryption commands
