@@ -14,6 +14,7 @@ import random
 import ast
 import operator
 import statistics
+import os
 
 COLOURS = {
    "black":"black",
@@ -38,6 +39,45 @@ def get_colour(value):
     return None
 
 app = Flask(__name__)
+
+
+# AI answers for questions that are not recognised commands
+def ask_ai(question):
+    api_key = os.environ.get("GEMINI_API_KEY")
+
+    if not api_key:
+        return (
+            "AI is not configured yet. Add GEMINI_API_KEY to your "
+            "Render environment variables."
+        )
+
+    try:
+        from google import genai
+
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model="gemini-3.8-flash",
+            contents=(
+                "You are the assistant inside a web app called Master Lock. "
+                "Answer the user's question clearly and helpfully. "
+                "Keep the response reasonably concise unless detail is needed.\n\n"
+                f"User question: {question[:4000]}"
+            ),
+        )
+
+        answer = response.text
+        if answer and answer.strip():
+            return answer.strip()
+
+        return "I couldn't generate an answer for that question."
+
+    except Exception:
+        app.logger.exception("Gemini request failed")
+        return (
+            "The AI request failed. Check that GEMINI_API_KEY is correct "
+            "and that your Gemini API quota is available."
+        )
+
 
 # Safe calculator
 def calculate_expression(expression):
@@ -1271,8 +1311,8 @@ def home():
 
         else:
             return jsonify({
-               "type":"url",
-               "url":"https://www.google.com/search?q=" + quote(original)
+               "type": "result",
+               "text": ask_ai(original)
             })
 
     return render_template("index.html")
