@@ -1,3 +1,7 @@
+<!-- #version -->
+<script>
+    const HTML_VERSION = 6;
+</script>
 <!DOCTYPE html>
 <html>
 <script>
@@ -5,7 +9,7 @@ console.log("HTML Version: 5")
 </script>
 <head>
     <title>Master Lock</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
        
 	body {
@@ -79,6 +83,35 @@ console.log("HTML Version: 5")
         #lockedScreen button {
             margin-left: 0;
         }
+
+        /* #mobile text sizes */
+
+        @media (max-width: 600px) {
+
+            input {
+                font-size: 32px !important;
+                padding: 16px !important;
+            }
+
+            button {
+                font-size: 26px !important;
+                padding: 16px 18px !important;
+                margin-left: 0 !important;
+            }
+
+            .result {
+                font-size: 30px !important;
+                line-height: 1.5 !important;
+            }
+
+            #lockedScreen h1 {
+                font-size: 36px !important;
+            }
+
+            #lockedScreen h2 {
+                font-size: 30px !important;
+            }
+        }
     </style>
 </head>
 
@@ -88,6 +121,7 @@ console.log("HTML Version: 5")
     <div id="normalScreen">
 
         <form id="commandForm">
+        <input type="hidden" name="html_version" id="html-version">
 
             <input
                 id="code"
@@ -640,6 +674,9 @@ input.addEventListener("keydown", event => {
     }
 
 });
+
+// #version
+document.getElementById("html-version").value = HTML_VERSION;
 
 </script>
 

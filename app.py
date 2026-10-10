@@ -35,7 +35,7 @@ def get_colour(value):
 app = Flask(__name__)
 
 #<==========VERSION==========>
-version = 19
+version = 20
 
 
 # Safe calculator
@@ -627,10 +627,22 @@ def home():
                 )
             })
 
-        elif code =="about":
+        
+        elif code == "about":
+            html_version = request.form.get(
+                "html_version",
+                "unknown"
+            )
+
             return jsonify({
-               "type":"result",
-               "text":"MASTER LOCK\nVERSION: "+str(version)+"\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
+                "type": "result",
+                "text": (
+                    "MASTER LOCK\n"
+                    "PYTHON VERSION: " + str(version) + "\n"
+                    "HTML VERSION: " + html_version + "\n"
+                    "STATUS: OPERATIONAL\n"
+                    "INTERFACE: ACTIVE"
+                )
             })
         
         # Calculator
