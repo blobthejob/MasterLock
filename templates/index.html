@@ -1002,9 +1002,20 @@ if (!response.ok) {
     }
 }
 
-// #AI answers - plain text, no spy animation
+// #AI error and Google fallback
 if (answer.type === "ai") {
-    renderMarkdown(result, answer.text || "");
+    const aiMessage = answer.text || "";
+    renderMarkdown(result, aiMessage);
+    const aiFailed = /usage limit|temporarily unavailable|couldn't process|couldn't generate|not configured/i.test(aiMessage);
+    if (aiFailed) {
+        result.textContent = aiMessage + "\n\nSearching Google in 3 seconds...";
+        setTimeout(() => {
+            const googleURL =
+                "https://www.google.com/search?q=" +
+                encodeURIComponent(submittedCommand);
+            window.location.href = googleURL;
+        }, 3000);
+    }
     return;
 }
 
