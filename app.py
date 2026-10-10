@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import re
 import json
 COLOURS = {
@@ -477,6 +479,39 @@ def home():
                 "text": CODES[code]["text"],
                 "unlocks": CODES[code]["unlocks"]
             })
+        
+        # #secret commands
+
+        elif code == "whoami":
+            return jsonify({
+                "type": "result",
+                "text": "IDENTITY: UNKNOWN\nACCESS LEVEL: RESTRICTED\nSESSION: ACTIVE"
+            })
+
+        elif code == "date":
+            current_time = datetime.now(
+                ZoneInfo("Europe/London")
+            )
+
+            return jsonify({
+                "type": "result",
+                "text": current_time.strftime(
+                    "DATE: %d/%m/%Y\nTIME: %H:%M:%S\nTIMEZONE: Europe/London"
+                )
+            })
+
+        elif code == "about":
+            return jsonify({
+                "type": "result",
+                "text": "MASTER LOCK\nVERSION: 3\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
+            })
+
+        elif code == "sudo":
+            return jsonify({
+                "type": "result",
+                "text": "PERMISSION DENIED.\nTHIS INCIDENT HAS BEEN LOGGED."
+            })
+        
                 # #encryption commands
 
         elif code.startswith("encrypt "):
@@ -672,7 +707,6 @@ def home():
             })
         elif code.startswith("youtube "):
             search = original[8:]
-
             return jsonify({
                 "type": "url",
                 "url": "https://www.youtube.com/results?search_query=" + quote(search)
@@ -684,9 +718,9 @@ def home():
                 "type": "url",
                 "url": "https://www.startpage.com/sp/search?sc=a8mbuE7dTHEw7be6dlK4UDzyUn5QdqVb4ODUfz9WgPssushtzAgfGFuatzCa6KnFwG3MqZkGtyoMcBbTxbAiKgGRYBFIbdsTP&t=device&language=english&lui=english&segment=startpage.udog&abp=0&abd=0&abe=0&query=" + quote(search)
             })
+        
         elif code.startswith("wiki "):
             search = original[5:]
-
             return jsonify({
                 "type": "url",
                 "url": "https://en.wikipedia.org/wiki/Special:Search?search=" + quote(search)
