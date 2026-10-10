@@ -584,7 +584,7 @@ def home():
                "text":"everybody dies frustrated and sad\nand that is beautiful"
             })
 
-        elif code = "8675309":
+        elif code == "8675309":
             return jsonify({
                "type":"result",
                "text":"Jenny, Jenny, here's my number:\n+447935307551\nNow I just need to make you mine..."
