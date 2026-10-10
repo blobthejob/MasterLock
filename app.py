@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from difflib import get_close_matches
 import re
 import json
 COLOURS = {
@@ -426,8 +427,27 @@ def home():
     if request.method =="POST":
 
         original = request.form["code"]
-        code = original.lower().replace(",","").replace(".","").replace("'","").replace(" ","").replace("?","").replace("!","").replace("<","").replace(">","")
+        code = original.lower().replace(",","").replace(".","").replace("'","").replace(" ","").replace("?","").replace("!","").replace("<","").replace(">","")     
+        # Commands allowed to use typo correction
+        TYPO_TOLERANT_COMMANDS = [
+            "hello",
+            "whoami",
+            "date",
+            "about",
+            "sudo",
+        ]
 
+        # Correct a likely typo without affecting normal searches
+        if code not in TYPO_TOLERANT_COMMANDS:
+            matches = get_close_matches(
+                code,
+                TYPO_TOLERANT_COMMANDS,
+                n=1,
+                cutoff=0.68
+            )
+
+            if matches:
+                code = matches[0]
         locked = request.form.get("locked") =="true"
 
         if locked and code == RESET_CODE.lower():
@@ -503,7 +523,7 @@ def home():
         elif code =="about":
             return jsonify({
                "type":"result",
-               "text":"MASTER LOCK\nVERSION: 10\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
+               "text":"MASTER LOCK\nVERSION: 11\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
             })
         
                 # #encryption commands
