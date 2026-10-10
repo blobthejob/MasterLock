@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 30
+version = 31
 
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
@@ -183,7 +183,7 @@ def calculate_maths(command):
     elif operation == "count":
         answer = len(numbers)
 
-    elif operation == "nthterm":
+    elif operation in ("nth", "nthterm")::
         if len(numbers) < 2:
             return "Enter at least two terms."
 
