@@ -33,7 +33,7 @@ def get_colour(value):
 app = Flask(__name__)
 
 #<==========VERSION==========>
-    version = 14
+version = 14
 
 
 # #cipher variants
