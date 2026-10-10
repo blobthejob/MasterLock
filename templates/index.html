@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 12;
+        const HTML_VERSION = 13;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -238,7 +238,7 @@
 
     <p>
         Commands: color red, fill blue, tool eraser,
-        tool line, tool rectangle, tool circle, size 5,
+        tool line, tool rectangle, tool circle, size 5, undo, 
         clear drawing, save drawing, exit draw
     </p>
 
@@ -291,6 +291,34 @@ function initialiseDrawing() {
     drawContext.fillRect(
         0, 0, drawCanvas.width, drawCanvas.height
     );
+}
+
+
+// #drawing undo history
+let drawingHistory = [];
+const MAX_DRAWING_HISTORY = 30;
+function saveDrawingState() {
+    drawingHistory.push(
+        drawContext.getImageData(
+            0, 0,
+            drawCanvas.width,
+            drawCanvas.height
+        )
+    );
+    if (drawingHistory.length > MAX_DRAWING_HISTORY) {
+        drawingHistory.shift();
+    }
+}
+function undoDrawing() {
+    if (drawingHistory.length === 0) {
+        drawStatus.textContent = "Nothing to undo.";
+        return;
+    }
+
+    const previousState = drawingHistory.pop();
+
+    drawContext.putImageData(previousState, 0, 0);
+    updateDrawStatus();
 }
 
 initialiseDrawing();
@@ -473,7 +501,7 @@ function floodFill(x, y) {
 
 drawCanvas.addEventListener("pointerdown", event => {
     if (!drawingOpen) return;
-
+    saveDrawingState();
     event.preventDefault();
 
     const point = getCanvasPoint(event);
@@ -606,6 +634,10 @@ function handleDrawCommand(command) {
     }
 
     const sizeCommand = text.match(/^size\s+(\d+)$/);
+if (command.toLowerCase() === "undo") {
+    undoDrawing();
+    return true;
+}
 
     if (sizeCommand) {
         const size = Number(sizeCommand[1]);
