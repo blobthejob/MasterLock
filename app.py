@@ -35,7 +35,7 @@ def get_colour(value):
 app = Flask(__name__)
 
 #<==========VERSION==========>
-version = 18
+version = 19
 
 
 # Safe calculator
@@ -81,6 +81,7 @@ def calculate_expression(expression):
             if isinstance(node.op, ast.USub):
                 return -value
         raise ValueError("Invalid calculation.")
+    expression = expression.replace("^", "**")
     tree = ast.parse(expression, mode="eval")
     return calculate(tree)
 
