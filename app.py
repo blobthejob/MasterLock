@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 31
+version = 32
 
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
@@ -40,45 +40,48 @@ def get_colour(value):
 
 app = Flask(__name__)
 
-
 # AI answers for questions that are not recognised commands
 def ask_ai(question):
     api_key = os.environ.get("GEMINI_API_KEY")
 
     if not api_key:
-        return (
-            "AI is not configured yet. Add GEMINI_API_KEY to your "
-            "Render environment variables."
-        )
+        return "AI is not configured. Add GEMINI_API_KEY to Render."
 
     try:
         from google import genai
+        from google.genai.errors import ServerError
+        import time
 
         client = genai.Client(api_key=api_key)
-        response = client.models.generate_content(
-            model="gemini-3.8-flash",
-            contents=(
-                "You are the assistant inside a web app called Master Lock. "
-                "Answer the user's question clearly and helpfully. "
-                "Keep the response reasonably concise unless detail is needed.\n\n"
-                f"User question: {question[:4000]}"
-            ),
-        )
 
-        answer = response.text
-        if answer and answer.strip():
-            return answer.strip()
+        for attempt in range(3):
+            try:
+                response = client.models.generate_content(
+                    model="gemini-3.8-flash",
+                    contents=(
+                        "You are the assistant inside Master Lock. "
+                        "Answer the user's question clearly and helpfully.\n\n"
+                        f"User question: {question[:4000]}"
+                    ),
+                )
 
-        return "I couldn't generate an answer for that question."
+                if response.text and response.text.strip():
+                    return response.text.strip()
+
+                return "I couldn't generate an answer. Please try again."
+
+            except ServerError as error:
+                if attempt == 2:
+                    raise
+                time.sleep(2 * (attempt + 1))
 
     except Exception:
         app.logger.exception("Gemini request failed")
         return (
-            "The AI request failed. Check that GEMINI_API_KEY is correct "
-            "and that your Gemini API quota is available."
+            "The AI is temporarily unavailable. "
+            "Please try your question again in a moment."
         )
-
-
+    
 # Safe calculator
 def calculate_expression(expression):
     operations = {
