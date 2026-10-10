@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 35
+version = 36
 
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
@@ -49,12 +49,12 @@ def ask_ai(question):
 
     try:
         from google import genai
-        from google.genai.errors import ServerError
+        from google.genai.errors import ClientError, ServerError
         import time
 
         client = genai.Client(
-        api_key=api_key,
-        http_options={"timeout": 10000}
+            api_key=api_key,
+            http_options={"timeout": 10000}
         )
 
         for attempt in range(2):
@@ -70,19 +70,40 @@ def ask_ai(question):
 
                 if response.text and response.text.strip():
                     return response.text.strip()
+
                 return "I couldn't generate an answer. Please try again."
 
-            except ServerError as error:
-                if attempt == 2:
-                    raise
-                time.sleep(2 * (attempt + 1))
+            except ClientError as error:
+                if getattr(error, "status_code", None) == 429:
+                    app.logger.warning("Gemini quota or rate limit reached.")
+                    return (
+                        "The AI has reached its usage limit. "
+                        "Please try again later."
+                    )
+
+                app.logger.exception("Gemini rejected the request")
+                return "The AI couldn't process that request. Please try again later."
+
+            except ServerError:
+                if attempt == 0:
+                    time.sleep(2)
+                    continue
+
+                app.logger.exception("Gemini server error after retry")
+                return (
+                    "The AI service is temporarily unavailable. "
+                    "Please try again later."
+                )
 
     except Exception:
         app.logger.exception("Gemini request failed")
         return (
             "The AI is temporarily unavailable. "
-            "Please try your question again in a moment."
+            "Please try your question again later."
         )
+
+    return "The AI couldn't generate an answer. Please try again later."
+
     
 # Safe calculator
 def calculate_expression(expression):
