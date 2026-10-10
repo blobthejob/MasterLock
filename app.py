@@ -404,8 +404,8 @@ def decrypt_text(text):
         return None
 
 
-UNLOCK_CODE ="everybody wants to rule the world"
-RESET_CODE ="reset puzzle"
+UNLOCK_CODE ="everybodywantstoruletheworld"
+RESET_CODE ="resetpuzzle"
 CODES = {
 
    "nosossosqueaquiestamospelosvossosesperamos": {
@@ -503,7 +503,7 @@ def home():
         elif code =="about":
             return jsonify({
                "type":"result",
-               "text":"MASTER LOCK\nVERSION: 6\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
+               "text":"MASTER LOCK\nVERSION: 8\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
             })
         
                 # #encryption commands
