@@ -324,9 +324,35 @@ const response = await fetch("/", {
     }
 }
 
-    if (answer.type === "result") {
-        result.textContent = answer.text;
-    }
+// #spy animation - all results
+if (answer.type === "result") {
+    const text = answer.text;
+    const characters =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*";
+    result.textContent = "";
+    let position = 0;
+    const interval = setInterval(() => {
+        let display = "";
+        for (let i = 0; i < text.length; i++) {
+            if (i < position) {
+                display += text[i];
+            } else if (text[i] === "\n" || text[i] === " ") {
+                display += text[i];
+            } else {
+                display += characters[
+                    Math.floor(Math.random() * characters.length)
+                ];
+            }
+        }
+        result.textContent = display;
+        position += 2;
+        if (position >= text.length) {
+            clearInterval(interval);
+            result.textContent = text;
+        }
+    }, 15);
+}
+
 if (answer.type === "code") {
 
     result.textContent = answer.text;
