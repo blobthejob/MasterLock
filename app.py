@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 23
+version = 24
 
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
@@ -13,6 +13,7 @@ import base64
 import random
 import ast
 import operator
+import statistics
 
 COLOURS = {
    "black":"black",
@@ -84,6 +85,61 @@ def calculate_expression(expression):
     expression = expression.replace("^", "**")
     tree = ast.parse(expression, mode="eval")
     return calculate(tree)
+
+# maths commands
+
+def calculate_maths(command):
+    parts = command.strip().lower().split()
+
+    if len(parts) < 2:
+        return "Enter a command followed by numbers."
+
+    operation = parts[0]
+
+    try:
+        numbers = [float(n) for n in parts[1:]]
+    except ValueError:
+        return "Invalid input. Use numbers separated by spaces."
+
+    if not numbers:
+        return "Enter at least one number."
+
+    if operation == "mean":
+        answer = statistics.mean(numbers)
+
+    elif operation == "median":
+        answer = statistics.median(numbers)
+
+    elif operation == "mode":
+        modes = statistics.multimode(numbers)
+        answer = ", ".join(map(str, modes))
+
+    elif operation == "range":
+        answer = max(numbers) - min(numbers)
+
+    elif operation == "sum":
+        answer = sum(numbers)
+
+    elif operation == "count":
+        answer = len(numbers)
+
+    elif operation == "nthterm":
+        if len(numbers) < 2:
+        return "Enter at least two terms."
+
+        difference = numbers[1] - numbers[0]
+        if not all(
+            numbers[i] - numbers[i - 1] == difference
+            for i in range(1, len(numbers))
+        ):
+            return "This is not an arithmetic sequence."
+        constant = numbers[0] - difference
+        answer = f"{difference:g}n {constant:+g}".replace("+", "+")
+    else:
+        return "Unknown maths command."
+    if isinstance(answer, float):
+        answer = f"{answer:g}"
+    return str(answer)
 
 # #cipher variants
 
@@ -510,6 +566,13 @@ def home():
             "calc",
             "random",
             "translate",
+            "mean",
+            "median",
+            "mode",
+            "range",
+            "sum",
+            "count",
+            "nthterm",
         ]
 
         code = re.sub(r"[^a-z0-9: ]", "", original.lower())
@@ -645,9 +708,33 @@ def home():
                     "INTERFACE: ACTIVE"
                 )
             })
-        
-        # Calculator
+        # Maths commands
 
+        elif code.split(" ")[0] in [
+            "mean",
+            "median",
+            "mode",
+            "range",
+            "sum",
+            "count",
+            "nthterm",
+        ]:
+
+            try:
+                answer = calculate_maths(original)
+
+                return jsonify({
+                    "type": "result",
+                    "text": str(answer)
+                })
+            except (ValueError, ZeroDivisionError) as error:
+
+                return jsonify({
+                    "type": "result",
+                    "text": "Maths error: " + str(error)
+                })
+            
+        # Calculator
         elif code.startswith("calc "):
 
             expression = original[5:].strip()
