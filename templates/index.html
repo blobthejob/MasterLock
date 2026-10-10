@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html>
-<!-- #version -->
-<script>
-    const HTML_VERSION = 7;
-    console.log("HTML Version: " + HTML_VERSION);
-</script>
 <head>
+    <!-- #version -->
+    <script>
+        const HTML_VERSION = 7;
+        console.log("HTML Version: " + HTML_VERSION);
+    </script>
     <title>Master Lock</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <style>
        
 	body {
@@ -319,7 +320,30 @@ const response = await fetch("/", {
     body: data
 });
 
-    const answer = await response.json();
+    // #check server response
+const responseText = await response.text();
+
+let answer;
+
+try {
+    answer = JSON.parse(responseText);
+} catch (error) {
+    result.textContent =
+        "SERVER ERROR: " + response.status +
+        "\nThe server returned HTML instead of JSON. Check the Render logs.";
+
+    console.error("Server response:", responseText);
+    return;
+}
+
+if (!response.ok) {
+    result.textContent =
+        "SERVER ERROR: " + response.status +
+        "\n" + (answer.error || answer.message || "Request failed.");
+
+    console.error("Server error:", answer);
+    return;
+}
 
     input.value = "";
     if (answer.type === "lock") {
