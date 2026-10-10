@@ -440,7 +440,7 @@ def home():
                 "type": "unlock"
             })
 
-        elif "operation shi" in code:
+        elif code = "cromstronginhismountain":
             return jsonify({
                 "type": "lock"
             })
@@ -451,7 +451,7 @@ def home():
                 "text": "Hello!"
             })
         
-        elif code == "no one in the world ever gets what they want and that is beautiful":
+        elif code == "nooneintheworldevergetswhattheywantandthatisbeautiful":
             return jsonify({
                 "type": "decrypt",
                 "text": "everybody dies frustrated and sad\nbut that is beautiful"
@@ -504,12 +504,6 @@ def home():
             return jsonify({
                 "type": "result",
                 "text": "MASTER LOCK\nVERSION: 3\nSTATUS: OPERATIONAL\nINTERFACE: ACTIVE"
-            })
-
-        elif code == "sudo":
-            return jsonify({
-                "type": "result",
-                "text": "PERMISSION DENIED.\nTHIS INCIDENT HAS BEEN LOGGED."
             })
         
                 # #encryption commands
