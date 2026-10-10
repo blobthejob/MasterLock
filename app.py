@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 32
+version = 33
 
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
@@ -52,9 +52,12 @@ def ask_ai(question):
         from google.genai.errors import ServerError
         import time
 
-        client = genai.Client(api_key=api_key)
+        client = genai.Client(
+        api_key=api_key,
+        http_options={"timeout": 10000}
+        )
 
-        for attempt in range(3):
+        for attempt in range(2):
             try:
                 response = client.models.generate_content(
                     model="gemini-3.8-flash",
@@ -67,7 +70,6 @@ def ask_ai(question):
 
                 if response.text and response.text.strip():
                     return response.text.strip()
-
                 return "I couldn't generate an answer. Please try again."
 
             except ServerError as error:
@@ -752,6 +754,10 @@ def home():
                "type":"unlock"
             })
 
+        elif code == " ":
+            return jsonify({
+                "type":"result"
+                "text":" "
         elif code == "crom strong on his mountain":
             return jsonify({
                "type":"lock"
