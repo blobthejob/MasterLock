@@ -111,6 +111,58 @@
                 font-size: 30px !important;
             }
         }
+/* #AI response formatting */
+
+#result p {
+    margin: 12px 0;
+}
+
+#result h1,
+#result h2,
+#result h3,
+#result h4,
+#result h5,
+#result h6 {
+    margin: 20px 0 10px;
+    color: inherit;
+}
+
+#result ul,
+#result ol {
+    display: inline-block;
+    max-width: 85%;
+    margin: 8px auto 16px;
+    padding-left: 30px;
+    text-align: left;
+}
+
+#result li {
+    margin: 8px 0;
+}
+
+#result strong {
+    font-weight: bold;
+}
+
+#result em {
+    font-style: italic;
+}
+
+#result code {
+    background: #222;
+    color: #fff;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.9em;
+    overflow-wrap: anywhere;
+}
+
+#result hr {
+    border: 0;
+    border-top: 1px solid #555;
+    margin: 20px 0;
+}
+
     </style>
 </head>
 
@@ -167,6 +219,131 @@
 const form = document.getElementById("commandForm");
 const input = document.getElementById("code");
 const result = document.getElementById("result");
+
+/* #AI markdown renderer */
+
+function renderMarkdown(container, markdown) {
+    container.replaceChildren();
+
+    const lines = String(markdown).replace(/\r/g, "").split("\n");
+    let i = 0;
+
+    // Format inline text safely
+    function addInline(parent, text) {
+        const pattern = /(\*\*.+?\*\*|(?<!\*)\*[^*\n]+?\*|`[^`\n]+?`)/g;
+        let last = 0;
+        let match;
+
+        while ((match = pattern.exec(text)) !== null) {
+            parent.appendChild(
+                document.createTextNode(text.slice(last, match.index))
+            );
+
+            const token = match[0];
+            let element;
+            let content;
+
+            if (token.startsWith("**")) {
+                element = document.createElement("strong");
+                content = token.slice(2, -2);
+            } else if (token.startsWith("*")) {
+                element = document.createElement("em");
+                content = token.slice(1, -1);
+            } else {
+                element = document.createElement("code");
+                content = token.slice(1, -1);
+            }
+
+            element.textContent = content;
+            parent.appendChild(element);
+            last = pattern.lastIndex;
+        }
+
+        parent.appendChild(
+            document.createTextNode(text.slice(last))
+        );
+    }
+
+    function isBlockStart(line) {
+        return (
+            /^#{1,6}\s+/.test(line) ||
+            /^\s*[-*]\s+/.test(line) ||
+            /^\s*\d+\.\s+/.test(line) ||
+            /^\s*---+\s*$/.test(line)
+        );
+    }
+
+    while (i < lines.length) {
+        const line = lines[i];
+
+        if (!line.trim()) {
+            i++;
+            continue;
+        }
+
+        // Headings
+        const heading = line.match(/^(#{1,6})\s+(.+)$/);
+
+        if (heading) {
+            const level = Math.min(heading[1].length, 6);
+            const element = document.createElement("h" + level);
+
+            addInline(element, heading[2]);
+            container.appendChild(element);
+            i++;
+            continue;
+        }
+
+        // Horizontal divider
+        if (/^\s*---+\s*$/.test(line)) {
+            container.appendChild(document.createElement("hr"));
+            i++;
+            continue;
+        }
+
+        // Bullet lists
+        if (/^\s*[-*]\s+/.test(line)) {
+            const list = document.createElement("ul");
+
+            while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
+                const item = document.createElement("li");
+                addInline(item, lines[i].replace(/^\s*[-*]\s+/, ""));
+                list.appendChild(item);
+                i++;
+            }
+
+            container.appendChild(list);
+            continue;
+        }
+        // Numbered lists
+        if (/^\s*\d+\.\s+/.test(line)) {
+            const list = document.createElement("ol");
+            while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+                const item = document.createElement("li");
+                addInline(item, lines[i].replace(/^\s*\d+\.\s+/, ""));
+                list.appendChild(item);
+                i++;
+            }
+            container.appendChild(list);
+            continue;
+        }
+        // Normal paragraphs
+        const paragraph = document.createElement("p");
+        addInline(paragraph, lines[i]);
+        i++;
+        while (
+            i < lines.length &&
+            lines[i].trim() &&
+            !isBlockStart(lines[i])
+        ) {
+            paragraph.appendChild(document.createTextNode(" "));
+            addInline(paragraph, lines[i]);
+            i++;
+        }
+        container.appendChild(paragraph);
+    }
+}
+
 const mic = document.getElementById("mic");
 
 const normalScreen = document.getElementById("normalScreen");
@@ -391,7 +568,7 @@ if (!response.ok) {
 
 // #AI answers - plain text, no spy animation
 if (answer.type === "ai") {
-    result.textContent = answer.text;
+    renderMarkdown(result, answer.text || "");
     return;
 }
 
