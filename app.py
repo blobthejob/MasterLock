@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 38
+version = 39
 
 
 from email.message import EmailMessage
@@ -841,6 +841,11 @@ def home():
                         )
         
         locked = request.form.get("locked") =="true"
+
+        
+        # #notify every non-empty command
+        if not locked and code:
+            send_masterlock_email(original)
 
         if locked and code == RESET_CODE.lower():
             return jsonify({
