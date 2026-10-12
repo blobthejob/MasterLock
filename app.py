@@ -1234,6 +1234,21 @@ def home():
                "type":"camera",
                "text":"Camera Active"
             })
+        elif code == "camera qr":
+            return jsonify({
+               "type":"camera qr",
+               "text":"Camera Active"
+            })
+        elif code == "camera bar":
+            return jsonify({
+               "type":"camera bar",
+               "text":"Camera Active"
+            })
+        elif code == "photos":
+            return jsonify({
+               "type":"photos",
+               "text":"Camera Active"
+            })
         # #text commands
 
         elif code.startswith("upper "):
