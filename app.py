@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 40
+version = 41
 
 
 from email.message import EmailMessage
@@ -156,7 +156,7 @@ def ask_ai(question):
                 response = client.models.generate_content(
                     model="gemini-3.8-flash",
                     contents=(
-                        "You are the assistant inside Master Lock. "
+                        "You are the assistant inside a custom website similar to iron man style Jarvis. "
                         "Answer the user's question clearly and helpfully.\n\n"
                         f"User question: {question[:4000]}"
                     ),

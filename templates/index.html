@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 13;
+        const HTML_VERSION = 14;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -200,6 +200,37 @@
     overflow-wrap: anywhere;
 }
 
+
+/* #camera scanner */
+
+#cameraMenu {
+    margin: 20px auto;
+    padding: 12px;
+    max-width: 600px;
+    box-sizing: border-box;
+    color: white;
+}
+
+#camera-reader {
+    width: 100%;
+    max-width: 500px;
+    margin: 15px auto;
+}
+
+#camera-reader video {
+    max-width: 100%;
+    border-radius: 8px;
+}
+
+#cameraStatus,
+#cameraResult {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+#closeCamera {
+    margin: 12px;
+}
     </style>
 </head>
 
@@ -226,6 +257,22 @@
         </form>
 
         <div id="result" class="result"></div>
+
+<!-- #camera scanner -->
+
+<div id="cameraMenu" style="display: none;">
+    <h2>CAMERA SCANNER</h2>
+
+    <p id="cameraStatus">Starting camera...</p>
+
+    <div id="camera-reader"></div>
+
+    <button type="button" id="closeCamera">
+        Close camera
+    </button>
+
+    <div id="cameraResult" class="result"></div>
+</div>
 
 <!-- #drawing menu -->
 <div id="drawMenu" style="display: none;">
@@ -267,6 +314,7 @@
 
 </div>
 
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <script>
 
@@ -878,6 +926,130 @@ if (localStorage.getItem("masterLockLocked") === "true") {
     showLocked();
 }
 
+// #camera scanner
+
+const cameraMenu = document.getElementById("cameraMenu");
+const cameraStatus = document.getElementById("cameraStatus");
+const cameraResult = document.getElementById("cameraResult");
+const closeCameraButton = document.getElementById("closeCamera");
+
+let cameraScanner = null;
+let cameraRunning = false;
+let cameraStarting = false;
+
+async function startCameraScanner() {
+    if (cameraStarting || cameraRunning) {
+        return;
+    }
+
+    if (typeof Html5Qrcode === "undefined") {
+        result.textContent =
+            "Camera scanner library failed to load. Check your internet connection.";
+        return;
+    }
+
+    cameraStarting = true;
+    cameraMenu.style.display = "block";
+    cameraResult.textContent = "";
+    cameraStatus.textContent = "Requesting camera permission...";
+
+    try {
+        const formats = [
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.ITF,
+            Html5QrcodeSupportedFormats.CODABAR,
+            Html5QrcodeSupportedFormats.DATA_MATRIX,
+            Html5QrcodeSupportedFormats.PDF_417,
+            Html5QrcodeSupportedFormats.AZTEC
+        ];
+
+        cameraScanner = new Html5Qrcode(
+            "camera-reader",
+            { formatsToSupport: formats }
+        );
+
+        await cameraScanner.start(
+            { facingMode: "environment" },
+            {
+                fps: 10,
+                qrbox: {
+                    width: 250,
+                    height: 180
+                },
+                aspectRatio: 1.0
+            },
+            async decodedText => {
+                cameraResult.textContent =
+                    "Scanned result:\n" + decodedText;
+
+                cameraStatus.textContent = "Code recognised.";
+
+                await stopCameraScanner();
+            },
+            () => {
+                // No code detected in this frame.
+            }
+        );
+
+        cameraRunning = true;
+        cameraStatus.textContent =
+            "Point your camera at a QR code or barcode.";
+    } catch (error) {
+        cameraStatus.textContent =
+            "Could not open the camera. Check browser permissions and try again.";
+
+        console.error("Camera scanner error:", error);
+
+        if (cameraScanner) {
+            try {
+                await cameraScanner.clear();
+            } catch (clearError) {
+                console.error("Scanner cleanup failed:", clearError);
+            }
+        }
+
+        cameraScanner = null;
+        cameraRunning = false;
+    } finally {
+        cameraStarting = false;
+    }
+}
+
+async function stopCameraScanner() {
+    if (cameraScanner) {
+        try {
+            if (cameraRunning) {
+                await cameraScanner.stop();
+            }
+        } catch (error) {
+            console.error("Could not stop camera cleanly:", error);
+        }
+
+        try {
+            await cameraScanner.clear();
+        } catch (error) {
+            console.error("Could not clear scanner:", error);
+        }
+    }
+
+    cameraScanner = null;
+    cameraRunning = false;
+}
+
+closeCameraButton.addEventListener("click", async () => {
+    await stopCameraScanner();
+
+    cameraMenu.style.display = "none";
+    cameraStatus.textContent = "Camera closed.";
+});
+
+
 
 form.addEventListener("submit", async event => {
 
@@ -942,6 +1114,14 @@ form.addEventListener("submit", async event => {
 
         return;
     }
+
+// #camera command
+
+if (submittedCommand.toLowerCase() === "camera") {
+    input.value = "";
+    await startCameraScanner();
+    return;
+}
 
     result.textContent = "";
 
