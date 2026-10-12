@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 20;
+        const HTML_VERSION = 21;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -812,9 +812,8 @@ function maxSpeak(message) {
 
     window.speechSynthesis.cancel();
 
-    const speech = new SpeechSynthesisUtterance(
-        String(message)
-    );
+    const text = String(message).replace(/\bMax\b/g, "Maks");
+    const speech = new SpeechSynthesisUtterance(text);
 
     speech.lang = "en-GB";
     speech.rate = 1;
