@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 15;
+        const HTML_VERSION = 16;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -209,7 +209,8 @@
 }
 
 
-/* #camera scanner */
+
+/* #camera and photos app */
 
 #cameraMenu {
     margin: 20px auto;
@@ -217,6 +218,45 @@
     max-width: 600px;
     box-sizing: border-box;
     color: white;
+}
+
+#cameraMenu h2 {
+    margin-bottom: 12px;
+}
+
+#cameraStatus {
+    color: white;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+#photoVideo {
+    display: block;
+    width: 100%;
+    max-height: 65vh;
+    object-fit: contain;
+    background: #111;
+    border-radius: 8px;
+}
+
+#photoControls {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 12px;
+    position: sticky;
+    bottom: 0;
+    padding: 8px 0;
+    background: black;
+}
+
+#photoControls button {
+    flex: 1;
+    margin: 0;
+}
+
+#takePhoto {
+    font-weight: bold;
 }
 
 #camera-reader {
@@ -230,15 +270,40 @@
     border-radius: 8px;
 }
 
-#cameraStatus,
-#cameraResult {
+#photoGallery {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.photo-card {
+    min-width: 0;
+    border: 1px solid #444;
+    padding: 6px;
+    overflow: hidden;
+}
+
+.photo-card img {
+    display: block;
+    width: 100%;
+    height: 150px;
+    object-fit: contain;
+    background: #111;
+}
+
+.photo-card button {
+    width: 100%;
+    margin: 6px 0 0;
+    padding: 8px !important;
+    font-size: 14px !important;
     overflow-wrap: anywhere;
-    white-space: pre-wrap;
 }
 
 #closeCamera {
-    margin: 12px;
+    margin: 12px 0;
 }
+
     </style>
 </head>
 
@@ -266,20 +331,33 @@
 
         <div id="result" class="result"></div>
 
-<!-- #camera scanner -->
 
+
+
+<!-- #camera and photos app -->
 <div id="cameraMenu" style="display: none;">
-    <h2>CAMERA SCANNER</h2>
+    <h2 id="cameraTitle">CAMERA</h2>
+    <p id="cameraStatus">Ready.</p>
 
-    <p id="cameraStatus">Starting camera...</p>
+    <!-- Photo camera -->
+    <div id="photoCamera" style="display: none;">
+        <video id="photoVideo" autoplay playsinline muted></video>
 
-    <div id="camera-reader"></div>
+        <canvas id="photoCanvas" style="display: none;"></canvas>
 
-    <button type="button" id="closeCamera">
-        Close camera
-    </button>
+        <div id="photoControls">
+            <button type="button" id="flipCamera">Flip Camera</button>
+            <button type="button" id="takePhoto">Take Photo</button>
+        </div>
+    </div>
 
-    <div id="cameraResult" class="result"></div>
+    <!-- QR and barcode scanner -->
+    <div id="camera-reader" style="display: none;"></div>
+
+    <!-- Saved photos -->
+    <div id="photoGallery" style="display: none;"></div>
+
+    <button type="button" id="closeCamera">Close</button>
 </div>
 
 <!-- #drawing menu -->
@@ -934,126 +1012,381 @@ if (localStorage.getItem("masterLockLocked") === "true") {
     showLocked();
 }
 
-// #camera scanner
+
+/* #camera and photos app */
 
 const cameraMenu = document.getElementById("cameraMenu");
+const cameraTitle = document.getElementById("cameraTitle");
 const cameraStatus = document.getElementById("cameraStatus");
-const cameraResult = document.getElementById("cameraResult");
+const cameraReader = document.getElementById("camera-reader");
+
+const photoCamera = document.getElementById("photoCamera");
+const photoVideo = document.getElementById("photoVideo");
+const photoCanvas = document.getElementById("photoCanvas");
+const photoGallery = document.getElementById("photoGallery");
+
+const takePhotoButton = document.getElementById("takePhoto");
+const flipCameraButton = document.getElementById("flipCamera");
 const closeCameraButton = document.getElementById("closeCamera");
 
 let cameraScanner = null;
 let cameraRunning = false;
 let cameraStarting = false;
 
-async function startCameraScanner() {
-    if (cameraStarting || cameraRunning) {
+let photoStream = null;
+let cameraFacing = "environment";
+let cameraMode = "";
+
+/* #photo database */
+
+let photoDatabase = null;
+
+function openPhotoDatabase() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open("MasterLockPhotos", 1);
+
+        request.onupgradeneeded = event => {
+            const db = event.target.result;
+
+            if (!db.objectStoreNames.contains("photos")) {
+                db.createObjectStore("photos", {
+                    keyPath: "id",
+                    autoIncrement: true
+                });
+            }
+        };
+
+        request.onsuccess = () => {
+            photoDatabase = request.result;
+            resolve(photoDatabase);
+        };
+
+        request.onerror = () => {
+            reject(request.error);
+        };
+    });
+}
+
+async function savePhoto(blob) {
+    const db = photoDatabase || await openPhotoDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction("photos", "readwrite");
+        const store = transaction.objectStore("photos");
+
+        store.add({
+            blob: blob,
+            created: new Date().toISOString()
+        });
+
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+        transaction.onabort = () => reject(transaction.error);
+    });
+}
+
+async function getSavedPhotos() {
+    const db = photoDatabase || await openPhotoDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction("photos", "readonly");
+        const request = transaction.objectStore("photos").getAll();
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+async function deleteSavedPhoto(id) {
+    const db = photoDatabase || await openPhotoDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction("photos", "readwrite");
+
+        transaction.objectStore("photos").delete(id);
+
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+    });
+}
+
+/* #camera menu */
+
+function openCameraMenu(title) {
+    cameraMenu.style.display = "block";
+    cameraTitle.textContent = title;
+    cameraStatus.textContent = "Starting...";
+    photoCamera.style.display = "none";
+    cameraReader.style.display = "none";
+    photoGallery.style.display = "none";
+    photoGallery.replaceChildren();
+}
+
+async function startPhotoCamera() {
+    await stopCamera();
+
+    cameraMode = "photo";
+    openCameraMenu("CAMERA");
+
+    photoCamera.style.display = "block";
+    cameraStatus.textContent = "Requesting camera permission...";
+
+    try {
+        if (!navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia) {
+            throw new Error("Camera access is not supported here.");
+        }
+
+        photoStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: cameraFacing
+            },
+            audio: false
+        });
+
+        photoVideo.srcObject = photoStream;
+        await photoVideo.play();
+
+        cameraStatus.textContent = "Ready to take a photo.";
+    } catch (error) {
+        cameraStatus.textContent =
+            "Could not open camera. Check browser permissions and try again.";
+
+        console.error("Photo camera error:", error);
+        await stopCamera();
+    }
+}
+
+/* #take photo */
+
+takePhotoButton.addEventListener("click", async () => {
+    if (!photoStream || !photoVideo.videoWidth) {
+        cameraStatus.textContent = "Camera is not ready yet.";
         return;
     }
 
+    try {
+        photoCanvas.width = photoVideo.videoWidth;
+        photoCanvas.height = photoVideo.videoHeight;
+
+        const context = photoCanvas.getContext("2d");
+
+        context.drawImage(
+            photoVideo,
+            0,
+            0,
+            photoCanvas.width,
+            photoCanvas.height
+        );
+
+        const blob = await new Promise(resolve => {
+            photoCanvas.toBlob(resolve, "image/jpeg", 0.92);
+        });
+
+        if (!blob) {
+            throw new Error("Photo could not be created.");
+        }
+
+        await savePhoto(blob);
+
+        cameraStatus.textContent = "Photo saved to Photos.";
+    } catch (error) {
+        console.error("Photo save error:", error);
+        cameraStatus.textContent =
+            "Could not save photo. Check browser storage permissions.";
+    }
+});
+
+/* #flip camera */
+
+flipCameraButton.addEventListener("click", async () => {
+    if (cameraMode !== "photo") return;
+
+    cameraFacing =
+        cameraFacing === "environment" ? "user" : "environment";
+
+    await startPhotoCamera();
+});
+
+/* #QR and barcode scanner */
+
+async function startCodeScanner(mode) {
+    await stopCamera();
+
+    cameraMode = mode;
+    openCameraMenu(mode === "qr" ? "QR SCANNER" : "BARCODE SCANNER");
+
+    cameraReader.style.display = "block";
+
     if (typeof Html5Qrcode === "undefined") {
-        result.textContent =
-            "Camera scanner library failed to load. Check your internet connection.";
+        cameraStatus.textContent =
+            "Scanner library failed to load. Check your internet connection.";
         return;
     }
 
     cameraStarting = true;
-    cameraMenu.style.display = "block";
-    cameraResult.textContent = "";
-    cameraStatus.textContent = "Requesting camera permission...";
 
     try {
-        const formats = [
-            Html5QrcodeSupportedFormats.QR_CODE,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.ITF,
-            Html5QrcodeSupportedFormats.CODABAR,
-            Html5QrcodeSupportedFormats.DATA_MATRIX,
-            Html5QrcodeSupportedFormats.PDF_417,
-            Html5QrcodeSupportedFormats.AZTEC
-        ];
+        const formats = mode === "qr"
+            ? [Html5QrcodeSupportedFormats.QR_CODE]
+            : [
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.UPC_E,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.ITF,
+                Html5QrcodeSupportedFormats.CODABAR
+            ];
 
-        cameraScanner = new Html5Qrcode(
-            "camera-reader",
-            { formatsToSupport: formats }
-        );
+        cameraScanner = new Html5Qrcode("camera-reader", {
+            formatsToSupport: formats
+        });
 
         await cameraScanner.start(
             { facingMode: "environment" },
             {
                 fps: 10,
-                qrbox: {
-                    width: 250,
-                    height: 180
-                },
-                aspectRatio: 1.0
+                qrbox: { width: 250, height: 180 },
+                aspectRatio: 1
             },
-            
-async decodedText => {
-    await stopCameraScanner();
+            async decodedText => {
+                if (!cameraScanner || cameraMode !== mode) return;
 
-    cameraMenu.style.display = "none";
+                await stopCamera();
 
-    cameraResult.textContent = "";
-    result.textContent = decodedText;
-},
+                cameraMenu.style.display = "none";
+                result.textContent = decodedText;
+            },
             () => {
                 // No code detected in this frame.
             }
         );
 
         cameraRunning = true;
-        cameraStatus.textContent =
-            "Point your camera at a QR code or barcode.";
+        cameraStatus.textContent = mode === "qr"
+            ? "Point at a QR code."
+            : "Point at a barcode.";
     } catch (error) {
+        console.error("Scanner error:", error);
+
         cameraStatus.textContent =
-            "Could not open the camera. Check browser permissions and try again.";
+            "Could not start scanner. Check camera permissions.";
 
-        console.error("Camera scanner error:", error);
-
-        if (cameraScanner) {
-            try {
-                await cameraScanner.clear();
-            } catch (clearError) {
-                console.error("Scanner cleanup failed:", clearError);
-            }
-        }
-
-        cameraScanner = null;
-        cameraRunning = false;
+        await stopCamera();
     } finally {
         cameraStarting = false;
     }
 }
 
-async function stopCameraScanner() {
+/* #photos gallery */
+
+async function showPhotos() {
+    await stopCamera();
+
+    cameraMode = "photos";
+    openCameraMenu("PHOTOS");
+    cameraStatus.textContent = "Loading saved photos...";
+    photoGallery.style.display = "grid";
+
+    try {
+        const photos = await getSavedPhotos();
+
+        if (!photos.length) {
+            photoGallery.style.display = "block";
+            cameraStatus.textContent = "No saved photos yet.";
+            return;
+        }
+
+        cameraStatus.textContent =
+            photos.length + (photos.length === 1
+                ? " saved photo."
+                : " saved photos.");
+
+        photos.sort((a, b) => b.id - a.id);
+
+        for (const photo of photos) {
+            const card = document.createElement("div");
+            card.className = "photo-card";
+
+            const image = document.createElement("img");
+            const imageURL = URL.createObjectURL(photo.blob);
+
+            image.src = imageURL;
+            image.alt = "Saved photo";
+
+            const downloadButton = document.createElement("button");
+            downloadButton.type = "button";
+            downloadButton.textContent = "Download";
+
+            downloadButton.addEventListener("click", () => {
+                const link = document.createElement("a");
+                link.href = imageURL;
+                link.download = "master-lock-photo-" + photo.id + ".jpg";
+                link.click();
+            });
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.textContent = "Delete";
+
+            deleteButton.addEventListener("click", async () => {
+                try {
+                    await deleteSavedPhoto(photo.id);
+                    URL.revokeObjectURL(imageURL);
+                    await showPhotos();
+                } catch (error) {
+                    cameraStatus.textContent = "Could not delete photo.";
+                    console.error(error);
+                }
+            });
+
+            card.append(image, downloadButton, deleteButton);
+            photoGallery.appendChild(card);
+        }
+    } catch (error) {
+        console.error("Gallery error:", error);
+        cameraStatus.textContent =
+            "Could not load photos. Browser storage may be unavailable.";
+    }
+}
+
+/* #stop camera */
+
+async function stopCamera() {
     if (cameraScanner) {
+        const scanner = cameraScanner;
+        cameraScanner = null;
+
         try {
             if (cameraRunning) {
-                await cameraScanner.stop();
+                await scanner.stop();
             }
         } catch (error) {
-            console.error("Could not stop camera cleanly:", error);
+            console.warn("Scanner stop:", error);
         }
 
         try {
-            await cameraScanner.clear();
+            await scanner.clear();
         } catch (error) {
-            console.error("Could not clear scanner:", error);
+            console.warn("Scanner cleanup:", error);
         }
     }
 
-    cameraScanner = null;
     cameraRunning = false;
+
+    if (photoStream) {
+        photoStream.getTracks().forEach(track => track.stop());
+        photoStream = null;
+    }
+
+    photoVideo.srcObject = null;
 }
 
 closeCameraButton.addEventListener("click", async () => {
-    await stopCameraScanner();
-
+    await stopCamera();
+    cameraMode = "";
     cameraMenu.style.display = "none";
     cameraStatus.textContent = "Camera closed.";
 });
@@ -1065,6 +1398,19 @@ form.addEventListener("submit", async event => {
     event.preventDefault();
 
     const submittedCommand = input.value.trim();
+
+// #clear old output for camera commands
+
+const cameraCommand = submittedCommand.toLowerCase().trim();
+
+if (
+    cameraCommand === "camera" ||
+    cameraCommand === "camera qr" ||
+    cameraCommand === "camera bar" ||
+    cameraCommand === "photos"
+) {
+    result.replaceChildren();
+}
 
     // #save command history
 
@@ -1124,13 +1470,38 @@ form.addEventListener("submit", async event => {
         return;
     }
 
-// #camera command
 
-if (submittedCommand.toLowerCase() === "camera") {
-    input.value = "";
-    await startCameraScanner();
-    return;
-}
+    // #camera and photos commands
+
+    const cameraCommand = submittedCommand.toLowerCase().trim();
+
+    if (cameraCommand === "camera") {
+        input.value = "";
+        result.textContent = "";
+        await startPhotoCamera();
+        return;
+    }
+
+    if (cameraCommand === "camera qr") {
+        input.value = "";
+        result.textContent = "";
+        await startCodeScanner("qr");
+        return;
+    }
+
+    if (cameraCommand === "camera bar") {
+        input.value = "";
+        result.textContent = "";
+        await startCodeScanner("bar");
+        return;
+    }
+
+    if (cameraCommand === "photos") {
+        input.value = "";
+        result.textContent = "";
+        await showPhotos();
+        return;
+    }
 
     result.textContent = "";
 
