@@ -1631,6 +1631,7 @@ if (!response.ok) {
 if (answer.type === "ai") {
     const aiMessage = answer.text || "";
     renderMarkdown(result, aiMessage);
+    maxSpeak(aiMessage);
     const aiFailed = /usage limit|temporarily unavailable|couldn't process|couldn't generate|not configured/i.test(aiMessage);
     if (aiFailed) {
         result.textContent = aiMessage + "\n\nSearching Google in 3 seconds...";
@@ -1651,6 +1652,7 @@ setTimeout(() => {
 // #spy animation - all results
 if (answer.type === "result") {
     const text = answer.text;
+    maxSpeak(text);
     const characters =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*";
     result.textContent = "";
@@ -1680,7 +1682,7 @@ if (answer.type === "result") {
 if (answer.type === "code") {
 
     result.textContent = answer.text;
-
+    maxSpeak(answer.text);
     answer.unlocks.forEach(code => {
 
         if (!unlockedCodes.includes(code)) {
@@ -1700,7 +1702,7 @@ if (answer.type === "code") {
 if (answer.type === "decrypt") {
 
     const text = answer.text;
-
+    maxSpeak(text);
     const characters =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
 
@@ -1762,7 +1764,6 @@ unlockButton.addEventListener("click", async () => {
 
     if (answer.type === "reset") {
         lockResult.textContent = "RESET";
-
         localStorage.removeItem("masterUnlocked");
 
         location.reload();
@@ -1771,7 +1772,6 @@ unlockButton.addEventListener("click", async () => {
     }
 
     if (answer.type === "unlock") {
-
         lockResult.textContent = "UNLOCKED";
 
         setTimeout(() => {
