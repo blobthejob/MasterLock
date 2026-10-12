@@ -41,6 +41,7 @@ def send_masterlock_email(message):
 
     # #sender information
     sender_ip = request.remote_addr or "Unavailable"
+
     user_agent = request.headers.get(
         "User-Agent",
         "Unavailable"
@@ -64,7 +65,8 @@ def send_masterlock_email(message):
         )
     }
 
-    brevo_request = urllib.request.brevo_request = urllib.request.Request((
+    # #send email through Brevo
+    brevo_request = urllib.request.Request(
         "https://api.brevo.com/v3/smtp/email",
         data=json.dumps(email_data).encode("utf-8"),
         headers={
@@ -77,10 +79,14 @@ def send_masterlock_email(message):
 
     try:
         with urllib.request.urlopen(
-            request, timeout=15
+            brevo_request,
+            timeout=15
         ) as response:
+
             if response.status in (200, 201, 202):
-                app.logger.info("Notification request accepted.")
+                app.logger.info(
+                    "Notification request accepted."
+                )
                 return True
 
             app.logger.error(
@@ -97,7 +103,9 @@ def send_masterlock_email(message):
         return False
 
     except Exception:
-        app.logger.exception("Notification request failed.")
+        app.logger.exception(
+            "Notification request failed."
+        )
         return False
 
 
