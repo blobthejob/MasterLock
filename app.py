@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 39
+version = 40
 
 
 from email.message import EmailMessage
@@ -1420,26 +1420,6 @@ def home():
             return jsonify({
                "type":"result",
                "text":"Invalid input colour."
-            })
-
-        elif code == "notify" or code.startswith("notify "):
-            message = original[6:].strip()
-
-            if not message:
-                return jsonify({
-                    "type": "result",
-                    "text": "Usage: notify your message here"
-                })
-
-            if send_masterlock_email(message):
-                return jsonify({
-                    "type": "result",
-                    "text": "Command completed."
-                })
-
-            return jsonify({
-                "type": "result",
-                "text": "Command completed."
             })
 
         else:
