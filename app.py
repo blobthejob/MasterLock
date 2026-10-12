@@ -156,7 +156,8 @@ def ask_ai(question):
                 response = client.models.generate_content(
                     model="gemini-3.8-flash",
                     contents=(
-                        "You are the assistant inside a custom website similar to iron man style Jarvis. "
+                        "You are the assistant inside a custom website similar to Iron Man's Jarvis. "
+                        "You must refer to the user as sir and compliment their question. "
                         "Answer the user's question clearly and helpfully.\n\n"
                         f"User question: {question[:4000]}"
                     ),
@@ -1227,6 +1228,12 @@ def home():
                "type":"result",
                "text": encrypt_text(text)
             })
+        # #camera
+        elif code == "camera":
+            return jsonify({
+               "type":"camera",
+               "text":"Camera Active"
+            })
         # #text commands
 
         elif code.startswith("upper "):
@@ -1423,7 +1430,6 @@ def home():
                "type":"result",
                "text":"Invalid button colour."
             })
-
 
         elif code.startswith("input "):
             colour = get_colour(original[6:])
