@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 37
+version = 38
 
 
 from email.message import EmailMessage
@@ -20,47 +20,77 @@ import os
 import smtplib
 import ssl
 
+
 # #master lock email notifications
 
 def send_masterlock_email(message):
-    email_address = os.environ.get("ICLOUD_EMAIL")
-    app_password = os.environ.get("ICLOUD_APP_PASSWORD")
+    import urllib.request
+    import urllib.error
 
-    if not email_address or not app_password:
-        app.logger.error("Master Lock email settings are missing.")
+    api_key = os.environ.get("BREVO_API_KEY")
+    sender_email = os.environ.get("BREVO_SENDER_EMAIL")
+    recipient_email = os.environ.get("NOTIFY_EMAIL")
+
+    if not api_key or not sender_email or not recipient_email:
+        app.logger.error("Notification settings are missing.")
         return False
-
-    email = EmailMessage()
-    email["Subject"] = "MASTER LOCK ALERT"
-    email["From"] = email_address
-    email["To"] = email_address
 
     timestamp = datetime.now(
         ZoneInfo("Europe/London")
     ).strftime("%d/%m/%Y %H:%M:%S")
 
-    email.set_content(
-        "A Master Lock notification was triggered.\n\n"
-        f"Time: {timestamp}\n"
-        f"Message: {message[:1000]}"
+    email_data = {
+        "sender": {
+            "name": "Master Lock",
+            "email": sender_email
+        },
+        "to": [
+            {"email": recipient_email}
+        ],
+        "subject": "MASTER LOCK ALERT",
+        "textContent": (
+            "A Master Lock notification was triggered.\n\n"
+            f"Time: {timestamp}\n"
+            f"Message: {message[:1000]}"
+        )
+    }
+
+    request = urllib.request.Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=json.dumps(email_data).encode("utf-8"),
+        headers={
+            "accept": "application/json",
+            "api-key": api_key,
+            "content-type": "application/json"
+        },
+        method="POST"
     )
 
     try:
-        with smtplib.SMTP(
-            "smtp.mail.me.com", 587, timeout=15
-        ) as server:
-            server.starttls(
-                context=ssl.create_default_context()
-            )
-            server.login(email_address, app_password)
-            server.send_message(email)
+        with urllib.request.urlopen(
+            request, timeout=15
+        ) as response:
+            if response.status in (200, 201, 202):
+                app.logger.info("Notification request accepted.")
+                return True
 
-        app.logger.info("Master Lock notification sent.")
-        return True
+            app.logger.error(
+                "Notification API returned status %s.",
+                response.status
+            )
+            return False
+
+    except urllib.error.HTTPError as error:
+        app.logger.error(
+            "Notification API rejected request: HTTP %s.",
+            error.code
+        )
+        return False
 
     except Exception:
-        app.logger.exception("Failed to send notification email.")
+        app.logger.exception("Notification request failed.")
         return False
+
 
 
 COLOURS = {
@@ -1399,12 +1429,12 @@ def home():
             if send_masterlock_email(message):
                 return jsonify({
                     "type": "result",
-                    "text": "Notification sent successfully."
+                    "text": "Command completed."
                 })
 
             return jsonify({
                 "type": "result",
-                "text": "Notification failed. Check the server configuration."
+                "text": "Command completed."
             })
 
         else:
