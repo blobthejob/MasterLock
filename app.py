@@ -39,6 +39,13 @@ def send_masterlock_email(message):
         ZoneInfo("Europe/London")
     ).strftime("%d/%m/%Y %H:%M:%S")
 
+    # #sender information
+    sender_ip = request.remote_addr or "Unavailable"
+    user_agent = request.headers.get(
+        "User-Agent",
+        "Unavailable"
+    )
+
     email_data = {
         "sender": {
             "name": "Master Lock",
@@ -51,7 +58,9 @@ def send_masterlock_email(message):
         "textContent": (
             "A Master Lock notification was triggered.\n\n"
             f"Time: {timestamp}\n"
-            f"Message: {message[:1000]}"
+            f"Message: {message[:1000]}\n"
+            f"IP address: {sender_ip}\n"
+            f"Browser/device details: {user_agent[:500]}"
         )
     }
 
