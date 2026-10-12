@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 14;
+        const HTML_VERSION = 15;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -47,6 +47,14 @@
   	  z-index: 1000;
   	  background: black;
   	  padding: 12px 0;
+	
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    box-sizing: border-box;
+
 	}
 
         button {
@@ -984,14 +992,15 @@ async function startCameraScanner() {
                 },
                 aspectRatio: 1.0
             },
-            async decodedText => {
-                cameraResult.textContent =
-                    "Scanned result:\n" + decodedText;
+            
+async decodedText => {
+    await stopCameraScanner();
 
-                cameraStatus.textContent = "Code recognised.";
+    cameraMenu.style.display = "none";
 
-                await stopCameraScanner();
-            },
+    cameraResult.textContent = "";
+    result.textContent = decodedText;
+},
             () => {
                 // No code detected in this frame.
             }
@@ -1414,7 +1423,7 @@ if (SpeechRecognition) {
 
         recognition.lang = "en-GB";
         recognition.continuous = false;
-        recognition.interimResults = false;
+        recognition.interimResults = true;
 
         recognition.onstart = function() {
 
@@ -1426,16 +1435,26 @@ if (SpeechRecognition) {
 
         };
 
-        recognition.onresult = function(event) {
+       
 
-            const text =
-                event.results[0][0].transcript;
+recognition.onresult = event => {
+    let finalTranscript = "";
+    let interimTranscript = "";
 
-            console.log("HEARD:", text);
+    for (let i = 0; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
 
-            input.value = text;
+        if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+        } else {
+            interimTranscript += transcript;
+        }
+    }
 
-        };
+    input.value = finalTranscript + interimTranscript;
+};
+
+
 
         recognition.onerror = function(event) {
 
@@ -1547,6 +1566,35 @@ input.addEventListener("keydown", event => {
 document.getElementById("html-version").value = HTML_VERSION;
 
 </script>
+<style>
+
+/* #keep command buttons on one row */
+#commandForm input[name="code"] {
+    flex: 1 1 0;
+    min-width: 0;
+    width: 0;
+    box-sizing: border-box;
+}
+
+#commandForm button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    #commandForm {
+        gap: 5px;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    #commandForm button {
+        padding: 6px 8px !important;
+        font-size: 12px !important;
+    }
+}
+
+</style>
 
 </body>
 </html>
