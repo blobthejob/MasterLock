@@ -64,7 +64,7 @@ def send_masterlock_email(message):
         )
     }
 
-    request = urllib.request.Request(
+    brevo_request = urllib.request.brevo_request = urllib.request.Request((
         "https://api.brevo.com/v3/smtp/email",
         data=json.dumps(email_data).encode("utf-8"),
         headers={
