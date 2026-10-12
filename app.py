@@ -1,7 +1,9 @@
 
 #<==========VERSION==========>
-version = 36
+version = 37
 
+
+from email.message import EmailMessage
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
 from datetime import datetime
@@ -15,6 +17,51 @@ import ast
 import operator
 import statistics
 import os
+import smtplib
+import ssl
+
+# #master lock email notifications
+
+def send_masterlock_email(message):
+    email_address = os.environ.get("ICLOUD_EMAIL")
+    app_password = os.environ.get("ICLOUD_APP_PASSWORD")
+
+    if not email_address or not app_password:
+        app.logger.error("Master Lock email settings are missing.")
+        return False
+
+    email = EmailMessage()
+    email["Subject"] = "MASTER LOCK ALERT"
+    email["From"] = email_address
+    email["To"] = email_address
+
+    timestamp = datetime.now(
+        ZoneInfo("Europe/London")
+    ).strftime("%d/%m/%Y %H:%M:%S")
+
+    email.set_content(
+        "A Master Lock notification was triggered.\n\n"
+        f"Time: {timestamp}\n"
+        f"Message: {message[:1000]}"
+    )
+
+    try:
+        with smtplib.SMTP(
+            "smtp.mail.me.com", 587, timeout=15
+        ) as server:
+            server.starttls(
+                context=ssl.create_default_context()
+            )
+            server.login(email_address, app_password)
+            server.send_message(email)
+
+        app.logger.info("Master Lock notification sent.")
+        return True
+
+    except Exception:
+        app.logger.exception("Failed to send notification email.")
+        return False
+
 
 COLOURS = {
    "black":"black",
@@ -1340,10 +1387,30 @@ def home():
                "text":"Invalid input colour."
             })
 
+        elif code == "notify" or code.startswith("notify "):
+            message = original[6:].strip()
+
+            if not message:
+                return jsonify({
+                    "type": "result",
+                    "text": "Usage: notify your message here"
+                })
+
+            if send_masterlock_email(message):
+                return jsonify({
+                    "type": "result",
+                    "text": "Notification sent successfully."
+                })
+
+            return jsonify({
+                "type": "result",
+                "text": "Notification failed. Check the server configuration."
+            })
+
         else:
             return jsonify({
-               "type": "ai",
-               "text": ask_ai(original)
+                "type": "ai",
+                "text": ask_ai(original)
             })
 
     return render_template("index.html")
