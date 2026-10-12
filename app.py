@@ -1244,7 +1244,7 @@ def home():
                "type":"camera bar",
                "text":"Camera Active"
             })
-        elif code == "photos":
+        elif code.startwith("photo"):
             return jsonify({
                "type":"photos",
                "text":"Camera Active"

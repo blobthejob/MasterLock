@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 17;
+        const HTML_VERSION = 18;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -1806,6 +1806,7 @@ if (SpeechRecognition) {
 
        
 
+
 recognition.onresult = event => {
     let finalTranscript = "";
     let interimTranscript = "";
@@ -1821,6 +1822,23 @@ recognition.onresult = event => {
     }
 
     input.value = finalTranscript + interimTranscript;
+
+    // #voice command execution
+    if (finalTranscript.trim()) {
+        const spokenText = finalTranscript.trim();
+
+        if (/^go to\s+/i.test(spokenText)) {
+            const command = spokenText
+                .replace(/^go to\s+/i, "")
+                .trim();
+
+            if (command) {
+                input.value = command;
+                recognition.stop();
+                form.requestSubmit();
+            }
+        }
+    }
 };
 
 
