@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 24;
+        const HTML_VERSION = 25;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -799,15 +799,6 @@ if (command.toLowerCase() === "undo") {
 const form = document.getElementById("commandForm");
 const input = document.getElementById("code");
 const result = document.getElementById("result");
-
-
-
-
-window.speechSynthesis.onvoiceschanged = listMaxVoices;
-listMaxVoices();
-
-window.speechSynthesis.onvoiceschanged = showMaxVoices;
-showMaxVoices();
 
 function maxSpeak(message) {
     if (!maxVoiceEnabled) return;
