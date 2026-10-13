@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 25;
+        const HTML_VERSION = 26;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -832,7 +832,7 @@ function maxSpeak(message) {
 
     const text = String(message)
     .replace(/\r\n?/g, "\n")
-    .replace(/[ \t]*\n+[ \t]*/g, ". ");
+    .replace(/[ \t]*\n+[ \t]*/g, ", ");
     const speech = new SpeechSynthesisUtterance(text);
 
     speech.lang = "en-GB";
@@ -1645,6 +1645,13 @@ if (!response.ok) {
 
         localStorage.setItem("master_input", answer.value);
     }
+}
+
+// #read command
+if (answer.type === "read") {
+    result.textContent = answer.text;
+    maxSpeak(answer.text);
+    return;
 }
 
 // #AI error and Google fallback
