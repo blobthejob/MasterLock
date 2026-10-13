@@ -820,15 +820,25 @@ speech.rate = 1.05;
 speech.pitch = 1.15;
 speech.volume = 1;
 
-    const voices = window.speechSynthesis.getVoices();
+    
+const voices = window.speechSynthesis.getVoices();
 
-    const britishVoice = voices.find(voice =>
-        voice.lang.toLowerCase() === "en-gb"
-    );
+const britishVoices = voices.filter(voice =>
+    voice.lang.toLowerCase().startsWith("en-gb")
+);
 
-    if (britishVoice) {
-        speech.voice = britishVoice;
-    }
+const preferredVoice =
+    britishVoices.find(voice =>
+        /natural|neural/i.test(voice.name)
+    ) ||
+    britishVoices.find(voice =>
+        /female|english/i.test(voice.name)
+    ) ||
+    britishVoices[0];
+
+if (preferredVoice) {
+    speech.voice = preferredVoice;
+}
 
     window.speechSynthesis.speak(speech);
 }
