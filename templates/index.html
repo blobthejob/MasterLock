@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 23;
+        const HTML_VERSION = 24;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -882,20 +882,17 @@ speech.pitch = 1.15;
 speech.volume = 1;
 
     
+
 const voices = window.speechSynthesis.getVoices();
 
 const britishVoices = voices.filter(voice =>
-    voice.lang.toLowerCase().startsWith("en-gb")
+    voice.lang.toLowerCase() === "en-gb"
 );
 
 const preferredVoice =
-    britishVoices.find(voice =>
-        /natural|neural/i.test(voice.name)
-    ) ||
-    britishVoices.find(voice =>
-        /female|english/i.test(voice.name)
-    ) ||
-    britishVoices[0];
+    britishVoices.find(voice => voice.name === "Rocko") ||
+    britishVoices.find(voice => voice.name === "Shelley") ||
+    britishVoices.find(voice => voice.name === "Daniel");
 
 if (preferredVoice) {
     speech.voice = preferredVoice;
