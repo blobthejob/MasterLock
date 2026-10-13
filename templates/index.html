@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 22;
+        const HTML_VERSION = 23;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -822,6 +822,50 @@ function listMaxVoices() {
 
 window.speechSynthesis.onvoiceschanged = listMaxVoices;
 listMaxVoices();
+
+/* #Max voice diagnostic */
+
+function showMaxVoices() {
+    const voices = window.speechSynthesis.getVoices();
+
+    let panel = document.getElementById("maxVoiceDiagnostic");
+
+    if (!panel) {
+        panel = document.createElement("div");
+        panel.id = "maxVoiceDiagnostic";
+
+        panel.style.cssText =
+            "background:#111;color:#fff;padding:12px;" +
+            "margin:12px 0;font:14px Arial,sans-serif;" +
+            "overflow-wrap:anywhere;";
+
+        document.body.prepend(panel);
+    }
+
+    panel.innerHTML = "<strong>Available Safari voices</strong>";
+
+    if (voices.length === 0) {
+        panel.innerHTML += "<p>No voices loaded yet. Tap Refresh.</p>";
+    }
+
+    voices.forEach(voice => {
+        const item = document.createElement("p");
+
+        item.textContent =
+            voice.name + " (" + voice.lang + ")" +
+            (voice.default ? " — Default" : "");
+
+        panel.appendChild(item);
+    });
+
+    const refresh = document.createElement("button");
+    refresh.textContent = "Refresh voices";
+    refresh.onclick = showMaxVoices;
+    panel.appendChild(refresh);
+}
+
+window.speechSynthesis.onvoiceschanged = showMaxVoices;
+showMaxVoices();
 
 function maxSpeak(message) {
     if (!maxVoiceEnabled) return;
