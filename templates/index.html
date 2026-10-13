@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 26;
+        const HTML_VERSION = 27;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -1889,17 +1889,21 @@ recognition.onresult = event => {
     if (finalTranscript.trim()) {
         const spokenText = finalTranscript.trim();
 
-        if (/^go to\s+/i.test(spokenText)) {
-            const command = spokenText
-                .replace(/^go to\s+/i, "")
-                .trim();
+        // #voice navigation phrases
 
-            if (command) {
-                input.value = command;
-                recognition.stop();
-                form.requestSubmit();
-            }
-        }
+const navigationMatch = spokenText.match(
+    /^\s*(?:max[\s,:-]+)?(?:go to|open|show me|take me to|navigate to|launch)\s+(.+?)\s*[.!?]*\s*$/i
+);
+
+if (navigationMatch) {
+    const command = navigationMatch[1].trim();
+
+    if (command) {
+        input.value = command;
+        recognition.stop();
+        form.requestSubmit();
+    }
+}
     }
 };
 
