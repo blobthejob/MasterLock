@@ -2010,18 +2010,10 @@ document.getElementById("html-version").value = HTML_VERSION;
 
 /* #Max startup voice */
 
-let maxStartupSpoken = false;
-
-function startMaxVoice() {
-    if (maxStartupSpoken) return;
-
-    maxStartupSpoken = true;
-
-    maxSpeak("Hello. I am Max. All systems are operational.");
-}
-
-document.addEventListener("click", startMaxVoice, {
-    once: true
+window.addEventListener("load", () => {
+    setTimeout(() => {
+        maxSpeak("Hello. I am Max. All systems are operational.");
+    }, 1000);
 });
 
 </script>
