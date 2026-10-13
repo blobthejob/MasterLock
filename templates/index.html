@@ -806,6 +806,23 @@ const result = document.getElementById("result");
 
 let maxVoiceEnabled = true;
 
+/* #List available speech voices */
+
+function listMaxVoices() {
+    const voices = window.speechSynthesis.getVoices();
+
+    console.table(voices.map(voice => ({
+        name: voice.name,
+        language: voice.lang,
+        default: voice.default
+    })));
+
+    console.log("Current Max voices:", voices.length);
+}
+
+window.speechSynthesis.onvoiceschanged = listMaxVoices;
+listMaxVoices();
+
 function maxSpeak(message) {
     if (!maxVoiceEnabled) return;
     if (!("speechSynthesis" in window)) return;
