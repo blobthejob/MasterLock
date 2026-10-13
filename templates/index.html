@@ -884,23 +884,14 @@ speech.volume = 1;
     
 const voices = window.speechSynthesis.getVoices();
 
-const britishVoices = voices.filter(voice =>
-    voice.lang.toLowerCase().startsWith("en-gb")
+const preferredVoice = voices.find(voice =>
+    voice.name === "Daniel" &&
+    voice.lang.toLowerCase() === "en-gb"
 );
-
-const preferredVoice =
-    britishVoices.find(voice =>
-        /natural|neural/i.test(voice.name)
-    ) ||
-    britishVoices.find(voice =>
-        /female|english/i.test(voice.name)
-    ) ||
-    britishVoices[0];
 
 if (preferredVoice) {
     speech.voice = preferredVoice;
 }
-
     window.speechSynthesis.speak(speech);
 }
 
