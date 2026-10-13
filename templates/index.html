@@ -2008,12 +2008,21 @@ input.addEventListener("keydown", event => {
 // #version
 document.getElementById("html-version").value = HTML_VERSION;
 
+
 /* #Max startup voice */
 
-window.addEventListener("load", () => {
-    setTimeout(() => {
-        maxSpeak("Hello. I am Max. All systems are operational.");
-    }, 1000);
+let maxStartupSpoken = false;
+
+function startMaxVoice() {
+    if (maxStartupSpoken) return;
+
+    maxStartupSpoken = true;
+
+    maxSpeak("Hello. I am Max. All systems are operational.");
+}
+
+document.addEventListener("click", startMaxVoice, {
+    once: true
 });
 
 </script>
