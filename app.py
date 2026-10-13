@@ -1459,6 +1459,25 @@ def home():
                "type":"result",
                "text":"Invalid input colour."
             })
+                elif code == "read":
+            return jsonify({
+                "type": "result",
+                "text": "Usage: read followed by the text you want me to speak."
+            })
+
+        elif code.startswith("read "):
+            text_to_read = original[5:].strip()
+
+            if not text_to_read:
+                return jsonify({
+                    "type": "result",
+                    "text": "Enter some text for me to read."
+                })
+
+            return jsonify({
+                "type": "read",
+                "text": text_to_read
+            })
 
         else:
             return jsonify({
