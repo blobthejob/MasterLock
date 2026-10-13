@@ -873,7 +873,10 @@ function maxSpeak(message) {
 
     window.speechSynthesis.cancel();
 
-    const text = String(message).replace(/\bMax\b/g, "Maks");
+    const text = String(message)
+    .replace(/\bMax\b/g, "Maks")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[ \t]*\n+[ \t]*/g, ". ");
     const speech = new SpeechSynthesisUtterance(text);
 
     speech.lang = "en-GB";
