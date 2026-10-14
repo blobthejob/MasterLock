@@ -823,34 +823,42 @@ function listMaxVoices() {
 window.speechSynthesis.onvoiceschanged = listMaxVoices;
 listMaxVoices();
 
+// #Max voice controls
+let maxMuted = false;
+let maxLastSpoken = "";
+
+// #Max speech
 
 function maxSpeak(message) {
-    if (!maxVoiceEnabled) return;
+    if (!maxVoiceEnabled || maxMuted) return;
     if (!("speechSynthesis" in window)) return;
+
+    maxLastSpoken = String(message);
 
     window.speechSynthesis.cancel();
 
-    const text = String(message)
-    .replace(/\r\n?/g, "\n")
-    .replace(/[ \t]*\n+[ \t]*/g, ", ");
+    const text = maxLastSpoken
+        .replace(/\r\n?/g, "\n")
+        .replace(/[ \t]*\n+[ \t]*/g, ", ");
+
     const speech = new SpeechSynthesisUtterance(text);
 
     speech.lang = "en-GB";
-speech.rate = 1.05;
-speech.pitch = 1.15;
-speech.volume = 1;
+    speech.rate = 1.05;
+    speech.pitch = 1.15;
+    speech.volume = 1;
 
-    
-const voices = window.speechSynthesis.getVoices();
+    const voices = window.speechSynthesis.getVoices();
 
-const preferredVoice = voices.find(voice =>
-    voice.name === "Daniel" &&
-    voice.lang.toLowerCase() === "en-gb"
-);
+    const preferredVoice = voices.find(voice =>
+        voice.name === "Daniel" &&
+        voice.lang.toLowerCase() === "en-gb"
+    );
 
-if (preferredVoice) {
-    speech.voice = preferredVoice;
-}
+    if (preferredVoice) {
+        speech.voice = preferredVoice;
+    }
+
     window.speechSynthesis.speak(speech);
 }
 
@@ -1886,26 +1894,106 @@ recognition.onresult = event => {
     input.value = finalTranscript + interimTranscript;
 
     // #voice command execution
-    if (finalTranscript.trim()) {
-        const spokenText = finalTranscript.trim();
+    // #voice command execution
 
-        // #voice navigation phrases
+if (finalTranscript.trim()) {
+    const spokenText = finalTranscript.trim();
 
-const navigationMatch = spokenText.match(
-    /^\s*(?:max[\s,:-]+)?(?:go to|open|show me|take me to|navigate to|launch)\s+(.+?)\s*[.!?]*\s*$/i
-);
+    // #Max direct commands
+    const maxCommandMatch = spokenText.match(
+        /^\s*max[\s,:-]+(.+?)\s*[.!?]*\s*$/i
+    );
 
-if (navigationMatch) {
-    const command = navigationMatch[1].trim();
+    if (maxCommandMatch) {
+        const maxCommand = maxCommandMatch[1]
+            .trim()
+            .toLowerCase()
+            .replace(/[.!?]+$/, "")
+            .trim();
 
-    if (command) {
-        input.value = command;
-        recognition.stop();
-        form.requestSubmit();
+        // #mute
+        if (maxCommand === "mute") {
+            maxMuted = true;
+            window.speechSynthesis.cancel();
+            result.textContent = "Max is muted.";
+            recognition.stop();
+            return;
+        }
+
+        // #unmute
+        if (maxCommand === "unmute") {
+            maxMuted = false;
+            result.textContent = "Max is unmuted.";
+            recognition.stop();
+            maxSpeak("I am back.");
+            return;
+        }
+
+        // #repeat
+        if (maxCommand === "repeat") {
+            const previousResponse = maxLastSpoken;
+            recognition.stop();
+
+            if (previousResponse && !maxMuted) {
+                maxSpeak(previousResponse);
+            }
+
+            return;
+        }
+
+        // #stop speaking
+        if (
+            maxCommand === "stop speaking" ||
+            maxCommand === "stop talking"
+        ) {
+            window.speechSynthesis.cancel();
+            recognition.stop();
+            return;
+        }
+
+        // #navigation
+        const navigationMatch = spokenText.match(
+            /^\s*(?:max[\s,:-]+)?(?:go to|open|show me|take me to|navigate to|launch)\s+(.+?)\s*[.!?]*\s*$/i
+        );
+
+        if (navigationMatch) {
+            const command = navigationMatch[1].trim();
+
+            if (command) {
+                input.value = command;
+                recognition.stop();
+                form.requestSubmit();
+                return;
+            }
+        }
+
+        // #other Max commands
+        // Pass any other "Max, ..." command to Master Lock.
+        const command = maxCommandMatch[1].trim();
+
+        if (command) {
+            input.value = command;
+            recognition.stop();
+            form.requestSubmit();
+            return;
+        }
+    }
+
+    // #navigation without wake word
+    const navigationMatch = spokenText.match(
+        /^\s*(?:go to|open|show me|take me to|navigate to|launch)\s+(.+?)\s*[.!?]*\s*$/i
+    );
+
+    if (navigationMatch) {
+        const command = navigationMatch[1].trim();
+
+        if (command) {
+            input.value = command;
+            recognition.stop();
+            form.requestSubmit();
+        }
     }
 }
-    }
-};
 
 
 
