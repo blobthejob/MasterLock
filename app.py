@@ -1494,28 +1494,6 @@ def home():
                 "command": code[4:]
             })
 
-        # Max read command
-
-        elif code == "max read":
-            return jsonify({
-                "type": "result",
-                "text": "Say or type Max read followed by the text you want spoken."
-            })
-
-        elif code.startswith("max read "):
-            text_to_read = original[9:].strip()
-
-            if not text_to_read:
-                return jsonify({
-                    "type": "result",
-                    "text": "Enter some text for me to read."
-                })
-
-            return jsonify({
-                "type": "read",
-                "text": text_to_read
-            })
-
         # Max navigation commands
 
         elif re.match(
