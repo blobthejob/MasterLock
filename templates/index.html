@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 28;
+        const HTML_VERSION = 29;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -1952,23 +1952,21 @@ if (finalTranscript.trim()) {
         }
 
         // #navigation
+        
         const navigationMatch = spokenText.match(
             /^\s*(?:max[\s,:-]+)?(?:go to|open|show me|take me to|navigate to|launch)\s+(.+?)\s*[.!?]*\s*$/i
         );
 
-        
-    if (navigationMatch) {
-        const command = navigationMatch[1].trim();
+        if (navigationMatch) {
+            const command = navigationMatch[1].trim();
 
-        if (command) {
-            input.value = command;
-            recognition.stop();
-            form.requestSubmit();
+            if (command) {
+                input.value = command;
+                recognition.stop();
+                form.requestSubmit();
+                return;
+            }
         }
-    }
-}
-};
-
 
         // #other Max commands
         // Pass any other "Max, ..." command to Master Lock.
@@ -1981,6 +1979,7 @@ if (finalTranscript.trim()) {
             return;
         }
     }
+
 
     // #navigation without wake word
     const navigationMatch = spokenText.match(
