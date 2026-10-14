@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 27;
+        const HTML_VERSION = 28;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -1956,16 +1956,19 @@ if (finalTranscript.trim()) {
             /^\s*(?:max[\s,:-]+)?(?:go to|open|show me|take me to|navigate to|launch)\s+(.+?)\s*[.!?]*\s*$/i
         );
 
-        if (navigationMatch) {
-            const command = navigationMatch[1].trim();
+        
+    if (navigationMatch) {
+        const command = navigationMatch[1].trim();
 
-            if (command) {
-                input.value = command;
-                recognition.stop();
-                form.requestSubmit();
-                return;
-            }
+        if (command) {
+            input.value = command;
+            recognition.stop();
+            form.requestSubmit();
         }
+    }
+}
+};
+
 
         // #other Max commands
         // Pass any other "Max, ..." command to Master Lock.
