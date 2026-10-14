@@ -1655,6 +1655,49 @@ if (!response.ok) {
     }
 }
 
+
+if (answer.type === "max_control") {
+
+    if (answer.command === "mute") {
+        maxMuted = true;
+        speechSynthesis.cancel();
+
+        result.textContent = "Max is muted.";
+        return;
+    }
+
+    if (answer.command === "unmute") {
+        maxMuted = false;
+
+        result.textContent = "Max is unmuted.";
+        maxSpeak("I am back.");
+        return;
+    }
+
+    if (answer.command === "repeat") {
+        if (!maxMuted && maxLastSpoken) {
+            maxSpeak(maxLastSpoken);
+        } else {
+            result.textContent =
+                "Max has nothing to repeat yet.";
+        }
+
+        return;
+    }
+
+    if (
+        answer.command === "stop speaking" ||
+        answer.command === "stop talking"
+    ) {
+        speechSynthesis.cancel();
+
+        result.textContent = "Max stopped speaking.";
+        return;
+    }
+}
+
+
+
 // #read command
 if (answer.type === "read") {
     result.textContent = answer.text;

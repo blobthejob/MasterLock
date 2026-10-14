@@ -813,6 +813,7 @@ def home():
             "count",
             "nth",
             "nthterm",
+            "max"
         ]
 
         code = re.sub(r"[^a-z0-9: ]", "", original.lower())
@@ -1478,6 +1479,85 @@ def home():
                 "type": "read",
                 "text": text_to_read
             })
+        
+        # Max voice commands
+
+        elif code in (
+            "max mute",
+            "max unmute",
+            "max repeat",
+            "max stop speaking",
+            "max stop talking"
+        ):
+            return jsonify({
+                "type": "max_control",
+                "command": code[4:]
+            })
+
+        # Max read command
+
+        elif code == "max read":
+            return jsonify({
+                "type": "result",
+                "text": "Say or type Max read followed by the text you want spoken."
+            })
+
+        elif code.startswith("max read "):
+            text_to_read = original[9:].strip()
+
+            if not text_to_read:
+                return jsonify({
+                    "type": "result",
+                    "text": "Enter some text for me to read."
+                })
+
+            return jsonify({
+                "type": "read",
+                "text": text_to_read
+            })
+
+        # Max navigation commands
+
+        elif re.match(
+            r"^(?:max\s+)?(?:go to|open|show me|take me to|navigate to|launch)\s+",
+            code
+        ):
+            destination = re.sub(
+                r"^(?:max\s+)?(?:go to|open|show me|take me to|navigate to|launch)\s+",
+                "",
+                original,
+                flags=re.IGNORECASE
+            ).strip()
+
+            if not destination:
+                return jsonify({
+                    "type": "result",
+                    "text": "Please specify where you want me to go."
+                })
+
+            sites = {
+                "youtube": "https://www.youtube.com",
+                "google": "https://www.google.com",
+                "wikipedia": "https://en.wikipedia.org",
+                "wiki": "https://en.wikipedia.org",
+                "startpage": "https://www.startpage.com"
+            }
+
+            destination_key = destination.lower()
+
+            if destination_key in sites:
+                destination_url = sites[destination_key]
+            else:
+                destination_url = (
+                    "https://www.google.com/search?q="
+                    + quote(destination)
+                )
+
+            return jsonify({
+                "type": "url",
+                "url": destination_url
+            })
+
 
         else:
             return jsonify({
