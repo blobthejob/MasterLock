@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 29;
+        const HTML_VERSION = 30;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -304,6 +304,65 @@
     margin: 12px 0;
 }
 
+
+/* #games */
+
+#gameMenu {
+    display: none;
+    width: 100%;
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 12px;
+    box-sizing: border-box;
+    color: white;
+}
+
+#gameMenu h2 {
+    margin-bottom: 12px;
+}
+
+#gameStatus {
+    margin: 12px 0;
+    color: white;
+    font-size: 18px;
+}
+
+#gameCanvas {
+    display: block;
+    width: 100%;
+    max-width: 500px;
+    margin: 12px auto;
+    background: #111;
+    border: 2px solid #444;
+    box-sizing: border-box;
+    touch-action: none;
+}
+
+#gameControls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+#gameControls button {
+    margin: 0;
+}
+
+#gameMenu button {
+    max-width: 100%;
+}
+
+@media (max-width: 600px) {
+    #gameCanvas {
+        max-width: 100%;
+    }
+
+    #gameMenu h2 {
+        font-size: 28px;
+    }
+}
     </style>
 </head>
 
@@ -331,6 +390,15 @@
 
         <div id="result" class="result"></div>
 
+<!-- #games -->
+<div id="gameMenu">
+    <h2 id="gameTitle">GAME</h2>
+    <p id="gameStatus">Ready.</p>
+    <canvas id="gameCanvas" width="500" height="500"></canvas>
+    <div id="gameControls"></div>
+    <button type="button" id="restartGame">Restart</button>
+    <button type="button" id="closeGame">Return to Master Lock</button>
+</div>
 
 
 
@@ -1621,6 +1689,14 @@ if (!response.ok) {
         window.open(answer.url, "_blank");
         return;
     }
+
+    // #launch game
+
+    if (answer.type === "game") {
+        startGame(answer);
+        return;
+    }
+
    if (answer.type === "css") {
 
     if (answer.target === "bg") {
@@ -1687,7 +1763,9 @@ if (answer.type === "max_control") {
 
     if (
         answer.command === "stop speaking" ||
-        answer.command === "stop talking"
+        answer.command === "stop talking" ||
+        answer.command === "stop"
+
     ) {
         speechSynthesis.cancel();
 
@@ -2167,6 +2245,502 @@ function startMaxVoice() {
 document.addEventListener("click", startMaxVoice, {
     once: true
 });
+
+
+/* #game engine */
+
+const gameMenu = document.getElementById("gameMenu");
+const gameTitle = document.getElementById("gameTitle");
+const gameStatus = document.getElementById("gameStatus");
+const gameCanvas = document.getElementById("gameCanvas");
+const gameCtx = gameCanvas.getContext("2d");
+const gameControls = document.getElementById("gameControls");
+
+let activeGame = null;
+let gameTimer = null;
+let gameState = null;
+let gamePlayers = 1;
+let gameOver = false;
+
+function startGame(answer) {
+    clearInterval(gameTimer);
+    gameTimer = null;
+    activeGame = answer.game;
+    gamePlayers = answer.players ?? 1;
+    gameOver = false;
+
+    gameMenu.style.display = "block";
+    gameTitle.textContent = {
+        "tic-tac-toe": "Tic-Tac-Toe",
+        "snake": "Snake",
+        "flappy-bird": "Flappy Bird",
+        "dino": "Dino Run"
+    }[activeGame] || "Game";
+
+    gameControls.replaceChildren();
+    gameCanvas.style.display = "block";
+
+    if (activeGame === "tic-tac-toe") {
+        setupTicTacToe();
+    } else if (activeGame === "snake") {
+        setupSnake();
+    } else if (activeGame === "flappy-bird") {
+        setupFlappyBird();
+    } else if (activeGame === "dino") {
+        setupDino();
+    }
+
+    gameMenu.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function addGameButton(label, callback) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.addEventListener("click", callback);
+    gameControls.appendChild(button);
+    return button;
+}
+
+function stopGame() {
+    clearInterval(gameTimer);
+    gameTimer = null;
+    activeGame = null;
+    gameState = null;
+    gameMenu.style.display = "none";
+    gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+}
+
+document.getElementById("closeGame").addEventListener("click", stopGame);
+
+document.getElementById("restartGame").addEventListener("click", () => {
+    if (activeGame) {
+        startGame({
+            game: activeGame,
+            players: gamePlayers
+        });
+    }
+});
+
+/* #tic tac toe */
+
+function setupTicTacToe() {
+    gameCanvas.width = 450;
+    gameCanvas.height = 450;
+    gameState = Array(9).fill("");
+    gameOver = false;
+    let turn = "X";
+
+    function winner(board) {
+        const lines = [
+            [0,1,2], [3,4,5], [6,7,8],
+            [0,3,6], [1,4,7], [2,5,8],
+            [0,4,8], [2,4,6]
+        ];
+
+        for (const line of lines) {
+            const [a,b,c] = line;
+            if (board[a] && board[a] === board[b] && board[b] === board[c]) {
+                return board[a];
+            }
+        }
+
+        return board.every(Boolean) ? "Draw" : null;
+    }
+
+    function draw() {
+        gameCtx.clearRect(0, 0, 450, 450);
+        gameCtx.strokeStyle = "#ffffff";
+        gameCtx.lineWidth = 5;
+
+        for (let i = 1; i < 3; i++) {
+            gameCtx.beginPath();
+            gameCtx.moveTo(i * 150, 15);
+            gameCtx.lineTo(i * 150, 435);
+            gameCtx.moveTo(15, i * 150);
+            gameCtx.lineTo(435, i * 150);
+            gameCtx.stroke();
+        }
+
+        gameState.forEach((mark, i) => {
+            if (!mark) return;
+
+            gameCtx.fillStyle = mark === "X" ? "#66ccff" : "#ffcc66";
+            gameCtx.font = "bold 100px Arial";
+            gameCtx.textAlign = "center";
+            gameCtx.textBaseline = "middle";
+            gameCtx.fillText(mark, (i % 3) * 150 + 75, Math.floor(i / 3) * 150 + 75);
+        });
+    }
+
+    function finishIfNeeded() {
+        const result = winner(gameState);
+        if (!result) return false;
+
+        gameOver = true;
+        gameStatus.textContent = result === "Draw" ? "It's a draw!" : result + " wins!";
+        return true;
+    }
+
+    function computerMove() {
+        if (gameOver) return;
+
+        const available = gameState
+            .map((value, index) => value ? -1 : index)
+            .filter(index => index !== -1);
+
+        if (!available.length) return;
+
+        // Prefer a winning move, then block the opponent, otherwise choose randomly.
+        let chosen = null;
+
+        for (const mark of ["O", "X"]) {
+            for (const index of available) {
+                const test = [...gameState];
+                test[index] = mark;
+                if (winner(test) === mark) {
+                    chosen = index;
+                    break;
+                }
+            }
+            if (chosen !== null) break;
+        }
+
+        if (chosen === null) {
+            chosen = available[Math.floor(Math.random() * available.length)];
+        }
+
+        gameState[chosen] = turn;
+        turn = turn === "X" ? "O" : "X";
+        draw();
+
+        if (!finishIfNeeded()) {
+            gameStatus.textContent = "Turn: " + turn;
+            if (gamePlayers === 0) {
+                setTimeout(computerMove, 350);
+            }
+        }
+    }
+
+    function playCell(index) {
+        if (gameOver || gameState[index]) return;
+        if (gamePlayers === 0) return;
+        if (gamePlayers === 1 && turn === "O") return;
+
+        gameState[index] = turn;
+        turn = turn === "X" ? "O" : "X";
+        draw();
+
+        if (finishIfNeeded()) return;
+
+        gameStatus.textContent = "Turn: " + turn;
+
+        if (gamePlayers === 1 && turn === "O") {
+            setTimeout(computerMove, 350);
+        }
+    }
+
+    gameCanvas.onclick = event => {
+        const rect = gameCanvas.getBoundingClientRect();
+        const x = (event.clientX - rect.left) * 450 / rect.width;
+        const y = (event.clientY - rect.top) * 450 / rect.height;
+        playCell(Math.floor(y / 150) * 3 + Math.floor(x / 150));
+    };
+
+    gameStatus.textContent = gamePlayers === 0
+        ? "Computer vs computer"
+        : gamePlayers === 1
+            ? "You are X. The computer is O."
+            : "Two players: X goes first.";
+
+    draw();
+
+    if (gamePlayers === 0) {
+        setTimeout(computerMove, 350);
+    }
+}
+
+/* #snake */
+
+function setupSnake() {
+    gameCanvas.width = 400;
+    gameCanvas.height = 400;
+
+    const size = 20;
+    let snake, food, dx, dy, score;
+
+    function reset() {
+        snake = [{x: 200, y: 200}, {x: 180, y: 200}, {x: 160, y: 200}];
+        dx = size;
+        dy = 0;
+        score = 0;
+        gameOver = false;
+        placeFood();
+        draw();
+        gameStatus.textContent = "Score: 0 — use arrow keys or the buttons.";
+    }
+
+    function placeFood() {
+        food = {
+            x: Math.floor(Math.random() * 20) * size,
+            y: Math.floor(Math.random() * 20) * size
+        };
+        if (snake.some(part => part.x === food.x && part.y === food.y)) {
+            placeFood();
+        }
+    }
+
+    function draw() {
+        gameCtx.fillStyle = "#101010";
+        gameCtx.fillRect(0, 0, 400, 400);
+
+        gameCtx.fillStyle = "#ff5555";
+        gameCtx.fillRect(food.x, food.y, size, size);
+
+        gameCtx.fillStyle = "#55dd88";
+        snake.forEach(part => gameCtx.fillRect(part.x + 1, part.y + 1, size - 2, size - 2));
+    }
+
+    function tick() {
+        if (gameOver) return;
+
+        const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+        if (
+            head.x < 0 || head.x >= 400 ||
+            head.y < 0 || head.y >= 400 ||
+            snake.some(part => part.x === head.x && part.y === head.y)
+        ) {
+            gameOver = true;
+            gameStatus.textContent = "Game over! Final score: " + score;
+            clearInterval(gameTimer);
+            return;
+        }
+
+        snake.unshift(head);
+
+        if (head.x === food.x && head.y === food.y) {
+            score++;
+            placeFood();
+        } else {
+            snake.pop();
+        }
+
+        gameStatus.textContent = "Score: " + score;
+        draw();
+    }
+
+    function steer(key) {
+        if (key === "ArrowUp" && dy === 0) { dx = 0; dy = -size; }
+        if (key === "ArrowDown" && dy === 0) { dx = 0; dy = size; }
+        if (key === "ArrowLeft" && dx === 0) { dx = -size; dy = 0; }
+        if (key === "ArrowRight" && dx === 0) { dx = size; dy = 0; }
+    }
+
+    gameState = { steer };
+    gameCanvas.onclick = null;
+
+    ["Up", "Down", "Left", "Right"].forEach(direction => {
+        addGameButton(direction, () => steer("Arrow" + direction));
+    });
+
+    reset();
+    gameTimer = setInterval(tick, 120);
+}
+
+/* #flappy bird */
+
+function setupFlappyBird() {
+    gameCanvas.width = 400;
+    gameCanvas.height = 500;
+
+    let birdY, velocity, pipes, score;
+
+    function reset() {
+        birdY = 230;
+        velocity = 0;
+        pipes = [{x: 400, gapY: 220}];
+        score = 0;
+        gameOver = false;
+        draw();
+        gameStatus.textContent = "Tap the game or press Space to flap.";
+    }
+
+    function flap() {
+        if (gameOver) {
+            startGame({game: "flappy-bird"});
+            return;
+        }
+        velocity = -7;
+    }
+
+    function draw() {
+        gameCtx.fillStyle = "#87ceeb";
+        gameCtx.fillRect(0, 0, 400, 500);
+
+        gameCtx.fillStyle = "#ffd34d";
+        gameCtx.beginPath();
+        gameCtx.arc(80, birdY, 14, 0, Math.PI * 2);
+        gameCtx.fill();
+
+        gameCtx.fillStyle = "#45aa55";
+        pipes.forEach(pipe => {
+            gameCtx.fillRect(pipe.x, 0, 55, pipe.gapY - 75);
+            gameCtx.fillRect(pipe.x, pipe.gapY + 75, 55, 500);
+        });
+
+        gameCtx.fillStyle = "#111";
+        gameCtx.font = "22px Arial";
+        gameCtx.fillText("Score: " + score, 12, 28);
+    }
+
+    function tick() {
+        if (gameOver) return;
+
+        velocity += 0.35;
+        birdY += velocity;
+
+        pipes.forEach(pipe => {
+            pipe.x -= 3;
+
+            if (!pipe.passed && pipe.x + 55 < 80) {
+                pipe.passed = true;
+                score++;
+            }
+
+            if (
+                80 + 14 > pipe.x && 80 - 14 < pipe.x + 55 &&
+                (birdY - 14 < pipe.gapY - 75 || birdY + 14 > pipe.gapY + 75)
+            ) {
+                end();
+            }
+        });
+
+        pipes = pipes.filter(pipe => pipe.x > -60);
+
+        if (pipes[pipes.length - 1].x < 240) {
+            pipes.push({x: 400, gapY: 110 + Math.random() * 280});
+        }
+
+        if (birdY < 0 || birdY > 500) end();
+
+        draw();
+    }
+
+    function end() {
+        gameOver = true;
+        gameStatus.textContent = "Game over! Score: " + score + ". Press Restart to try again.";
+        clearInterval(gameTimer);
+    }
+
+    gameCanvas.onclick = flap;
+    addGameButton("Flap", flap);
+
+    reset();
+    gameTimer = setInterval(tick, 25);
+}
+
+/* #dino */
+
+function setupDino() {
+    gameCanvas.width = 500;
+    gameCanvas.height = 220;
+
+    let dinoY, velocity, obstacles, score;
+
+    function reset() {
+        dinoY = 160;
+        velocity = 0;
+        obstacles = [];
+        score = 0;
+        gameOver = false;
+        draw();
+        gameStatus.textContent = "Tap to jump or press Space.";
+    }
+
+    function jump() {
+        if (gameOver) return;
+        if (dinoY >= 160) velocity = -10;
+    }
+
+    function draw() {
+        gameCtx.fillStyle = "#f5f5f5";
+        gameCtx.fillRect(0, 0, 500, 220);
+
+        gameCtx.fillStyle = "#222";
+        gameCtx.fillRect(0, 190, 500, 3);
+
+        gameCtx.fillStyle = "#333";
+        gameCtx.fillRect(50, dinoY, 28, 30);
+        gameCtx.fillRect(68, dinoY + 8, 18, 12);
+
+        obstacles.forEach(obstacle => {
+            gameCtx.fillRect(obstacle.x, 166, 15, 24);
+            gameCtx.fillRect(obstacle.x + 8, 174, 12, 16);
+        });
+
+        gameCtx.font = "18px Arial";
+        gameCtx.fillText("Score: " + score, 12, 24);
+    }
+
+    function tick() {
+        if (gameOver) return;
+
+        velocity += 0.5;
+        dinoY += velocity;
+
+        if (dinoY > 160) {
+            dinoY = 160;
+            velocity = 0;
+        }
+
+        if (Math.random() < 0.025) {
+            obstacles.push({x: 500});
+        }
+
+        obstacles.forEach(obstacle => {
+            obstacle.x -= 5;
+
+            if (obstacle.x === 50) score++;
+
+            if (obstacle.x < 78 && obstacle.x + 20 > 50 && dinoY > 136) {
+                gameOver = true;
+                gameStatus.textContent = "Game over! Score: " + score;
+                clearInterval(gameTimer);
+            }
+        });
+
+        obstacles = obstacles.filter(obstacle => obstacle.x > -30);
+        gameStatus.textContent = "Score: " + score;
+        draw();
+    }
+
+    gameCanvas.onclick = jump;
+    addGameButton("Jump", jump);
+
+    reset();
+    gameTimer = setInterval(tick, 30);
+}
+
+/* #game keyboard controls */
+
+document.addEventListener("keydown", event => {
+    if (!activeGame || gameOver) return;
+
+    if (activeGame === "snake" && event.key.startsWith("Arrow")) {
+        event.preventDefault();
+        gameState?.steer(event.key);
+    }
+
+    if (
+        (activeGame === "flappy-bird" || activeGame === "dino") &&
+        event.code === "Space"
+    ) {
+        event.preventDefault();
+        gameCanvas.click();
+    }
+});
+
 
 </script>
 <style>

@@ -1479,6 +1479,51 @@ def home():
                 "type": "read",
                 "text": text_to_read
             })
+                # Game commands
+
+        tic_tac_toe_match = re.fullmatch(
+            r"play\s+tic[\s-]*tac[\s-]*toe(?:\s+([012]))?",
+            code
+        )
+
+        if tic_tac_toe_match:
+            players = tic_tac_toe_match.group(1)
+
+            if players is None:
+                players = 1
+            else:
+                players = int(players)
+
+            return jsonify({
+                "type": "game",
+                "game": "tic-tac-toe",
+                "players": players
+            })
+
+        elif code in ("play snake", "play the snake game"):
+            return jsonify({
+                "type": "game",
+                "game": "snake"
+            })
+
+        elif code in (
+            "play flappy bird",
+            "play flappybird"
+        ):
+            return jsonify({
+                "type": "game",
+                "game": "flappy-bird"
+            })
+
+        elif code in (
+            "play dino",
+            "play the dino game",
+            "play dinosaur"
+        ):
+            return jsonify({
+                "type": "game",
+                "game": "dino"
+            })
         
         # Max voice commands
 
@@ -1487,7 +1532,8 @@ def home():
             "max unmute",
             "max repeat",
             "max stop speaking",
-            "max stop talking"
+            "max stop talking",
+            "max stop"
         ):
             return jsonify({
                 "type": "max_control",
