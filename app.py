@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 41
+version = 43
 
 
 from email.message import EmailMessage
@@ -1524,6 +1524,33 @@ def home():
                 "type": "game",
                 "game": "dino"
             })
+        elif code in (
+            "play minesweeper",
+            "play mine sweeper"
+        ):
+            return jsonify({
+                "type": "game",
+                "game": "minesweeper"
+            })
+
+        elif code in (
+            "play block blast",
+            "play blockblast"
+        ):
+            return jsonify({
+                "type": "game",
+                "game": "block-blast"
+            })
+
+        elif code in (
+            "play space invaders",
+            "play spaceinvaders"
+        ):
+            return jsonify({
+                "type": "game",
+                "game": "space-invaders"
+            })
+        
         
         # Max voice commands
 
@@ -1581,12 +1608,20 @@ def home():
                 "type": "url",
                 "url": destination_url
             })
+        elif code.startswith("ai "):
+            text = original[3:]
+            return jsonify({
+                "type": "ai",
+                "text": ask_ai(text)
+            })
+            
 
 
         else:
+            search = original
             return jsonify({
-                "type": "ai",
-                "text": ask_ai(original)
+               "type":"url",
+               "url":"https://www.google.com/search?q=" + quote(search)
             })
 
     return render_template("index.html")
