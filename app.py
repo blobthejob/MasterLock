@@ -1614,9 +1614,6 @@ def home():
                 "type": "ai",
                 "text": ask_ai(text)
             })
-            
-
-
         else:
             search = original
             return jsonify({
