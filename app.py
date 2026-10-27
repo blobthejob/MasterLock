@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 43
+version = 44
 
 
 from email.message import EmailMessage
