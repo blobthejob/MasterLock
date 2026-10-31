@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 43
+version = 44
 
 
 from email.message import EmailMessage
@@ -1614,9 +1614,6 @@ def home():
                 "type": "ai",
                 "text": ask_ai(text)
             })
-            
-
-
         else:
             search = original
             return jsonify({
