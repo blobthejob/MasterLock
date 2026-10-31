@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 36;
+        const HTML_VERSION = 40;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -421,6 +421,16 @@
             glow: "#00ff41"
         },
 
+	ocean: {
+            bgImage: "linear-gradient(to bottom, #0d1b4d 0%, #000000 80%)",
+	    text: "#00ffff", accent: "#00118f",
+            inputBg: "#00001a", btnBg: "#00002b", btnHover: "#00005c",
+            codeBg: "#00002b",
+            font: "'Courier New', Courier, monospace",
+            glow: "#0041ff"
+        },
+
+
         future: {
             bg: "#050816", text: "#7df9ff", accent: "#00e5ff",
             inputBg: "#0a1030", inputText: "#e0faff", inputFocus: "#ff2bd6",
@@ -429,15 +439,6 @@
             font: "'Trebuchet MS', 'Segoe UI', sans-serif",
             glow: "#00e5ff",
             bgImage: "radial-gradient(ellipse at top, #0d1b4d 0%, #050816 60%)"
-        },
-
-	ocean: {
-            bgImage: "linear-gradient(to bottom, #0d1b4d 0%, #000000 80%)",
-	    text: "#00FFFF", accent: "#00118f",
-            inputBg: "#00001a", btnBg: "#00002B", btnHover: "#00005c",
-            codeBg: "#00002B",
-            font: "'Courier New', Courier, monospace",
-            glow: "#0041ff"
         },
 
         retro: {
@@ -1964,18 +1965,6 @@ if (!response.ok) {
         return;
     }
 
-    if (answer.type === "style") {
-        const applied = answer.name && MasterStyle.apply(answer.name);
-
-        result.textContent = applied === "default"
-            ? "Style reset to default."
-            : applied
-                ? "Style set to " + applied + "."
-                : "Available styles: " + MasterStyle.list().join(", ");
-        return;
-    }
-
-
    if (answer.type === "css") {
 
     if (answer.target === "bg") {
@@ -2063,25 +2052,11 @@ if (answer.type === "read") {
     return;
 }
 
-// #AI error and Google fallback
+// #AI response
 if (answer.type === "ai") {
     const aiMessage = answer.text || "";
     renderMarkdown(result, aiMessage);
     maxSpeak(aiMessage);
-    const aiFailed = /usage limit|temporarily unavailable|couldn't process|couldn't generate|not configured/i.test(aiMessage);
-    if (aiFailed) {
-        result.textContent = aiMessage + "\n\nSearching Google in 3 seconds...";
-setTimeout(() => {
-    const googleURL =
-        "https://www.google.com/search?q=" +
-        encodeURIComponent(submittedCommand);
-
-    window.open(googleURL, "_blank");
-
-    result.textContent = aiMessage +
-        "\n\nGoogle search opened in a new tab.";
-}, 3000);
-    }
     return;
 }
 
