@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 43
+version = 44
 
 
 from email.message import EmailMessage
@@ -813,7 +813,8 @@ def home():
             "count",
             "nth",
             "nthterm",
-            "max"
+            "max",
+            "help"
         ]
 
         code = re.sub(r"[^a-z0-9: ]", "", original.lower())
@@ -1460,11 +1461,6 @@ def home():
                "type":"result",
                "text":"Invalid input colour."
             })
-        elif code == "read":
-            return jsonify({
-                "type": "result",
-                "text": "Usage: read followed by the text you want me to speak."
-            })
 
         elif code.startswith("read "):
             text_to_read = original[5:].strip()
@@ -1499,58 +1495,6 @@ def home():
                 "game": "tic-tac-toe",
                 "players": players
             })
-
-        elif code in ("play snake", "play the snake game"):
-            return jsonify({
-                "type": "game",
-                "game": "snake"
-            })
-
-        elif code in (
-            "play flappy bird",
-            "play flappybird"
-        ):
-            return jsonify({
-                "type": "game",
-                "game": "flappy-bird"
-            })
-
-        elif code in (
-            "play dino",
-            "play the dino game",
-            "play dinosaur"
-        ):
-            return jsonify({
-                "type": "game",
-                "game": "dino"
-            })
-        elif code in (
-            "play minesweeper",
-            "play mine sweeper"
-        ):
-            return jsonify({
-                "type": "game",
-                "game": "minesweeper"
-            })
-
-        elif code in (
-            "play block blast",
-            "play blockblast"
-        ):
-            return jsonify({
-                "type": "game",
-                "game": "block-blast"
-            })
-
-        elif code in (
-            "play space invaders",
-            "play spaceinvaders"
-        ):
-            return jsonify({
-                "type": "game",
-                "game": "space-invaders"
-            })
-        
         
         # Max voice commands
 
@@ -1614,8 +1558,11 @@ def home():
                 "type": "ai",
                 "text": ask_ai(text)
             })
-            
-
+        elif code == "help":
+            return jsonify({
+                "type":"result",
+                "text":"Use commands like: \n[about] for version and status \n[date] for system date and time \n[ai __] to ask the AI a query \n[translate _] to translate to a language \n[yt _] to open youtube, [g _] to open google \n[wiki _] to open wikipedia"
+            })
 
         else:
             search = original
