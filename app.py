@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 44
+version = 43
 
 
 from email.message import EmailMessage
@@ -10,7 +10,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from difflib import get_close_matches
 import re
-import json
+import json 
 import base64
 import random
 import ast
@@ -1614,6 +1614,9 @@ def home():
                 "type": "ai",
                 "text": ask_ai(text)
             })
+            
+
+
         else:
             search = original
             return jsonify({
