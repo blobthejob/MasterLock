@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 46
+version = 47
 
 
 from email.message import EmailMessage
@@ -1561,7 +1561,13 @@ def home():
         elif code == "help":
             return jsonify({
                 "type":"result",
-                "text":"Use commands like: \n[about] for version and status \n[date] for system date and time \n[ai _] to ask the AI a query \n[translate _] to translate to a language \n[yt _] to open youtube \n[g _] to open google \n[wiki _] to open wikipedia \n[upper _] to change the text to UPPERCASE \n[lower _] to change the text to lowercase \n[binary _] to convert to/from UTF-8 \n[bg {color}] to change the color of the background \n[text {color}] to change the color of the text \n[btn {color}] to change the color of the buttons \n[mean {list,2,3,etc}] to get the mean of a sequence \n[median {list,2,3,etc}] to get the median of a sequence \n[mode {list,2,3,etc}] to get the mode of a sequence \n[range {list,2,3,etc}] to get the range of a sequence \n[sum {list,2,3,etc}] to get the sum of a sequence \n[nth {list,2,3,etc}] to get the nth term of a sequence \n[calc {a+-/*b}] to calculate a result of an equation"
+                "text":"Use commands like: \n[about] for version and status \n[date] for system date and time \n[ai _] to ask the AI a query \n[translate _] to translate to a language \n[yt _] to open youtube \n[g _] to open google \n[wiki _] to open wikipedia \n[upper _] to change the text to UPPERCASE \n[lower _] to change the text to lowercase \n[binary _] to convert to/from UTF-8 \n[bg {color}] to change the color of the background \n[text {color}] to change the color of the text \n[btn {color}] to change the color of the buttons \n[mean {list,2,3,etc}] to get the mean of a sequence \n[median {list,2,3,etc}] to get the median of a sequence \n[mode {list,2,3,etc}] to get the mode of a sequence \n[range {list,2,3,etc}] to get the range of a sequence \n[sum {list,2,3,etc}] to get the sum of a sequence \n[nth {list,2,3,etc}] to get the nth term of a sequence \n[calc {a+-/*b}] to calculate a result of an equation \n[camera] to access the camera"
+            })
+        
+        elif code == "style" or code.startswith("style "):
+            return jsonify({
+                "type": "style",
+                "name": code[5:].strip()
             })
 
         else:

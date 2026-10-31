@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 31;
+        const HTML_VERSION = 33;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -364,6 +364,235 @@
     }
 }
     </style>
+<!-- #styles -->
+<script>
+(function () {
+    "use strict";
+
+    /* ============================================================
+       STYLE PRESETS  -  type  style <name>  to use one
+       ------------------------------------------------------------
+       Only bg, text and accent are required. Everything else is
+       optional and falls back to a sensible default:
+
+         bg         page background          text       main text colour
+         accent     borders and lines        panel      command bar background
+         inputBg / inputText / inputBorder / inputFocus
+         btnBg / btnText / btnBorder / btnHover
+         codeBg / codeText                   canvasBg   game board background
+         font       font-family              glow       text glow colour
+         bgImage    CSS gradient over the background
+
+       TO ADD YOUR OWN: copy a block below, rename it, change colours.
+       ============================================================ */
+    const STYLE_PRESETS = {
+
+        dark: {
+            bg: "#121212", text: "#e8e8e8", accent: "#3a3a3a",
+            inputBg: "#1e1e1e", btnBg: "#2a2a2a", btnHover: "#3d3d3d",
+            codeBg: "#2a2a2a"
+        },
+
+        light: {
+            bg: "#f4f4f4", text: "#1a1a1a", accent: "#b8b8b8",
+            inputBg: "#ffffff", inputText: "#111111",
+            btnBg: "#e4e4e4", btnText: "#111111", btnHover: "#d0d0d0",
+            codeBg: "#e0e0e0", codeText: "#111111",
+            canvasBg: "#1c1c1c"
+        },
+
+        halloween: {
+            bg: "#120800", text: "#ff7518", accent: "#7b2fa8",
+            inputBg: "#1f0f00", inputText: "#ffb347", inputBorder: "#ff7518",
+            inputFocus: "#b266ff",
+            btnBg: "#2a1038", btnText: "#ff9a3c", btnBorder: "#ff7518",
+            btnHover: "#4b1d6b",
+            codeBg: "#2a1038", codeText: "#ffb347",
+            font: "Georgia, 'Times New Roman', serif",
+            glow: "#ff7518",
+            bgImage: "radial-gradient(circle at 50% 0%, #3a1450 0%, #120800 65%)"
+        },
+
+        hacker: {
+            bg: "#000000", text: "#00ff41", accent: "#008f11",
+            inputBg: "#001a00", btnBg: "#002b00", btnHover: "#005c00",
+            codeBg: "#002b00",
+            font: "'Courier New', Courier, monospace",
+            glow: "#00ff41"
+        },
+
+        future: {
+            bg: "#050816", text: "#7df9ff", accent: "#00e5ff",
+            inputBg: "#0a1030", inputText: "#e0faff", inputFocus: "#ff2bd6",
+            btnBg: "#0a1030", btnHover: "#14307a",
+            codeBg: "#0a1030",
+            font: "'Trebuchet MS', 'Segoe UI', sans-serif",
+            glow: "#00e5ff",
+            bgImage: "radial-gradient(ellipse at top, #0d1b4d 0%, #050816 60%)"
+        },
+
+        retro: {
+            bg: "#2a170c", text: "#f2c14e", accent: "#d9531e",
+            inputBg: "#3b2212", inputText: "#fbe3a0", inputFocus: "#f2c14e",
+            btnBg: "#d9531e", btnText: "#2a170c", btnHover: "#f2c14e",
+            codeBg: "#3b2212", codeText: "#fbe3a0",
+            font: "'Trebuchet MS', 'Gill Sans', sans-serif"
+        }
+
+        // , mystyle: { bg: "#000033", text: "#ffffff", accent: "#6666ff" }
+    };
+
+    const STORAGE_KEY = "master_style";
+    const STYLE_TAG_ID = "masterStyleTheme";
+    const OLD_COLOUR_KEYS = ["master_bg", "master_text", "master_btn", "master_input"];
+    const DEFAULT_ALIASES = ["default", "reset", "off", "original", "normal"];
+
+    function buildCss(p) {
+        const bg = p.bg;
+        const text = p.text;
+        const accent = p.accent || text;
+        const panel = p.panel || bg;
+        const inputBg = p.inputBg || bg;
+        const inputText = p.inputText || text;
+        const inputBorder = p.inputBorder || accent;
+        const inputFocus = p.inputFocus || text;
+        const btnBg = p.btnBg || bg;
+        const btnText = p.btnText || text;
+        const btnBorder = p.btnBorder || accent;
+        const btnHover = p.btnHover || accent;
+        const codeBg = p.codeBg || bg;
+        const codeText = p.codeText || text;
+        const canvasBg = p.canvasBg || "#111";
+
+        let css = "";
+
+        css += "body { background-color: " + bg + "; color: " + text + ";";
+        if (p.bgImage) {
+            css += " background-image: " + p.bgImage + ";" +
+                   " background-repeat: no-repeat;" +
+                   " background-attachment: fixed;";
+        }
+        if (p.font) css += " font-family: " + p.font + ";";
+        css += " }\n";
+
+        if (p.font) css += "input, button { font-family: inherit; }\n";
+
+        if (p.glow) {
+            css += "body, input, button { text-shadow: 0 0 6px " + p.glow + "; }\n";
+        }
+
+        css += "input { background: " + inputBg + "; color: " + inputText +
+               "; border: 2px solid " + inputBorder + "; }\n";
+        css += "input:focus { border-color: " + inputFocus + "; }\n";
+        css += "#commandForm { background: " + panel + "; }\n";
+        css += "button { background: " + btnBg + "; color: " + btnText +
+               "; border: 2px solid " + btnBorder + "; }\n";
+        css += "button:hover { background: " + btnHover + "; }\n";
+        css += "#result code { background: " + codeBg + "; color: " + codeText + "; }\n";
+        css += "#result hr { border-top-color: " + accent + "; }\n";
+        css += "#drawMenu, #drawStatus, #gameMenu, #gameStatus, " +
+               "#cameraMenu, #cameraStatus { color: " + text + "; }\n";
+        css += "#drawCanvas { border-color: " + accent + "; }\n";
+        css += "#gameCanvas { background: " + canvasBg + "; border-color: " + accent + "; }\n";
+        css += "#photoControls { background: " + panel + "; }\n";
+        css += ".photo-card { border-color: " + accent + "; }\n";
+
+        return css;
+    }
+
+    function setThemeColour(colour) {
+        let meta = document.querySelector('meta[name="theme-color"]');
+
+        if (!colour) {
+            if (meta) meta.remove();
+            return;
+        }
+
+        if (!meta) {
+            meta = document.createElement("meta");
+            meta.name = "theme-color";
+            document.head.appendChild(meta);
+        }
+
+        meta.content = colour;
+    }
+
+    function show(name) {
+        let tag = document.getElementById(STYLE_TAG_ID);
+        const preset = STYLE_PRESETS[name];
+
+        if (!preset) {
+            if (tag) tag.remove();
+            setThemeColour(null);
+            return;
+        }
+
+        if (!tag) {
+            tag = document.createElement("style");
+            tag.id = STYLE_TAG_ID;
+            document.head.appendChild(tag);
+        }
+
+        tag.textContent = buildCss(preset);
+        setThemeColour(preset.bg);
+    }
+
+    // Old bg / text / btn / input commands paint inline styles that would
+    // hide a preset, so a preset clears them first.
+    function clearColourOverrides() {
+        OLD_COLOUR_KEYS.forEach(key => localStorage.removeItem(key));
+
+        document.body.style.backgroundColor = "";
+        document.body.style.backgroundImage = "";
+        document.body.style.color = "";
+
+        document.querySelectorAll("*").forEach(element => {
+            element.style.color = "";
+        });
+
+        document.querySelectorAll("button, input").forEach(element => {
+            element.style.backgroundColor = "";
+        });
+    }
+
+    function current() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        return STYLE_PRESETS[saved] ? saved : "default";
+    }
+
+    // Returns the style name that was applied, or null if it doesn't exist.
+    function apply(requested) {
+        const name = String(requested || "").trim().toLowerCase();
+
+        if (DEFAULT_ALIASES.includes(name)) {
+            clearColourOverrides();
+            show(null);
+            localStorage.removeItem(STORAGE_KEY);
+            return "default";
+        }
+
+        if (!STYLE_PRESETS[name]) return null;
+
+        clearColourOverrides();
+        show(name);
+        localStorage.setItem(STORAGE_KEY, name);
+        return name;
+    }
+
+    function list() {
+        return Object.keys(STYLE_PRESETS).concat("default");
+    }
+
+    window.MasterStyle = { apply, list, current };
+
+    // Restore the saved style straight away so the page doesn't flash.
+    try {
+        show(current());
+    } catch (error) {
+        console.error("Could not restore style:", error);
+    }
+})();
+</script>
 </head>
 
 <body>
@@ -1094,6 +1323,7 @@ localStorage.setItem(
 
 if (savedBg) {
     document.body.style.backgroundColor = savedBg;
+    document.body.style.backgroundImage = "none";
 }
 
 if (savedText) {
@@ -1602,6 +1832,34 @@ if (
     }
 
 
+    // #style command
+
+    const styleMatch = submittedCommand.toLowerCase().match(/^styles?(?:\s+(.+))?$/);
+
+    if (styleMatch) {
+        const requested = (styleMatch[1] || "").trim();
+        input.value = "";
+
+        if (!requested || requested === "list") {
+            result.textContent =
+                "Current style: " + MasterStyle.current() + "\n" +
+                "Available styles: " + MasterStyle.list().join(", ") + "\n" +
+                "Usage: style <name>";
+            return;
+        }
+
+        const applied = MasterStyle.apply(requested);
+
+        result.textContent = applied === "default"
+            ? "Style reset to default."
+            : applied
+                ? "Style set to " + applied + "."
+                : "Unknown style: " + requested + "\n" +
+                  "Available styles: " + MasterStyle.list().join(", ");
+
+        return;
+    }
+
     // #camera and photos commands
 
     if (cameraCommand === "camera") {
@@ -1697,10 +1955,23 @@ if (!response.ok) {
         return;
     }
 
+    if (answer.type === "style") {
+        const applied = answer.name && MasterStyle.apply(answer.name);
+
+        result.textContent = applied === "default"
+            ? "Style reset to default."
+            : applied
+                ? "Style set to " + applied + "."
+                : "Available styles: " + MasterStyle.list().join(", ");
+        return;
+    }
+
+
    if (answer.type === "css") {
 
     if (answer.target === "bg") {
         document.body.style.backgroundColor = answer.value;
+        document.body.style.backgroundImage = "none";
         localStorage.setItem("master_bg", answer.value);
     }
 
