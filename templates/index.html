@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 31;
+        const HTML_VERSION = 32;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -2274,7 +2274,7 @@ function startGame(answer) {
         "tic-tac-toe": "Tic-Tac-Toe",
         "snake": "Snake",
         "flappy-bird": "Flappy Bird",
-        "dino": "Dino Run"
+        "dino": "Dino Run",
 	"minesweeper": "Minesweeper",
         "block-blast": "Block Blast",
         "space-invaders": "Space Invaders"
@@ -2297,7 +2297,7 @@ function startGame(answer) {
         setupBlockBlast();
     } else if (activeGame === "space-invaders") {
         setupSpaceInvaders();
-
+    }
     gameMenu.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
