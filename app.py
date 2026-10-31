@@ -814,7 +814,8 @@ def home():
             "nth",
             "nthterm",
             "max",
-            "help"
+            "help",
+            "style"
         ]
 
         code = re.sub(r"[^a-z0-9: ]", "", original.lower())
