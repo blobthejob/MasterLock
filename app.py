@@ -791,6 +791,8 @@ def home():
 
         TYPO_TOLERANT_COMMANDS = [
             "hello",
+            "hi",
+            "hey",
             "who am i",
             "date",
             "about",
@@ -832,8 +834,6 @@ def home():
         ]
 
         code = re.sub(r"[^a-z0-9: ]", "", original.lower())
-        if code.startswith("hey "):
-            code = code[4:]
         compact_commands = [
             command for command in TYPO_TOLERANT_COMMANDS
             if len(command) >= 3
@@ -903,7 +903,7 @@ def home():
                "type":"lock"
             })
 
-        elif code =="hello":
+        elif code == "hello" or code == "hi" or code == "hey" or:
             return jsonify({
                "type":"result",
                "text":"Hello!"

@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 41;
+        const HTML_VERSION = 44;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -1768,6 +1768,15 @@ form.addEventListener("submit", async event => {
 
     event.preventDefault();
 
+ // "hey max ..." behaves exactly like "max ..." (and "hey ..." like "...")
+    const wakePhrase = /^\s*hey\b[\s,.:!-]*(?=\w)/i;
+
+    if (wakePhrase.test(input.value)) {
+        input.value = input.value
+            .replace(wakePhrase, "")
+            .replace(/[.!?]+\s*$/, "");
+    }
+
     const submittedCommand = input.value.trim();
 
 // #clear old output for camera commands
@@ -2299,7 +2308,7 @@ recognition.onresult = event => {
     // #voice command execution
 
 if (finalTranscript.trim()) {
-    const spokenText = finalTranscript.trim();
+    const spokenText = finalTranscript.trim().replace(/^\s*hey\b[\s,:-]*(?=\w)/i, "");
 
     // #Max direct commands
     const maxCommandMatch = spokenText.match(
