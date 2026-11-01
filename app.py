@@ -903,7 +903,7 @@ def home():
                "type":"lock"
             })
 
-        elif code == "hello" or code == "hi" or code == "hey" or:
+        elif code in ("hello", "hi", "hey"):
             return jsonify({
                "type":"result",
                "text":"Hello!"
