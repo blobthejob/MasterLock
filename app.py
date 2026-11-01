@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 48
+version = 49
 
 
 from email.message import EmailMessage
@@ -832,6 +832,8 @@ def home():
         ]
 
         code = re.sub(r"[^a-z0-9: ]", "", original.lower())
+        if code.startswith("hey "):
+            code = code[4:]
         compact_commands = [
             command for command in TYPO_TOLERANT_COMMANDS
             if len(command) >= 3
