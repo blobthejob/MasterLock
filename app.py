@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 47
+version = 48
 
 
 from email.message import EmailMessage
@@ -143,63 +143,76 @@ def ask_ai(question):
 
     try:
         from google import genai
-        from google.genai.errors import ClientError, ServerError
+        from google.genai.errors import ClientError
         import time
 
         client = genai.Client(
             api_key=api_key,
             http_options={"timeout": 10000}
         )
-
-        for attempt in range(2):
-            try:
-                response = client.models.generate_content(
-                    model="gemini-3.8-flash",
-                    contents=(
-                        "You are the assistant inside a custom website similar to Iron Man's Jarvis. "
-                        "You must refer to the user as sir and compliment their question. "
-                        "Answer the user's question clearly and helpfully.\n\n"
-                        f"User question: {question[:4000]}"
-                    ),
-                )
-
-                if response.text and response.text.strip():
-                    return response.text.strip()
-
-                return "I couldn't generate an answer. Please try again."
-
-            except ClientError as error:
-                if getattr(error, "status_code", None) == 429:
-                    app.logger.warning("Gemini quota or rate limit reached.")
-                    return (
-                        "The AI has reached its usage limit. "
-                        "Please try again later."
-                    )
-
-                app.logger.exception("Gemini rejected the request")
-                return "The AI couldn't process that request. Please try again later."
-
-            except ServerError:
-                if attempt == 0:
-                    time.sleep(2)
-                    continue
-
-                app.logger.exception("Gemini server error after retry")
-                return (
-                    "The AI service is temporarily unavailable. "
-                    "Please try again later."
-                )
-
     except Exception:
-        app.logger.exception("Gemini request failed")
+        app.logger.exception("Could not start the Gemini client")
         return (
             "The AI is temporarily unavailable. "
             "Please try your question again later."
         )
 
-    return "The AI couldn't generate an answer. Please try again later."
+    max_attempts = 3
+    started = time.monotonic()
 
-    
+    for attempt in range(1, max_attempts + 1):
+        try:
+            response = client.models.generate_content(
+                model="gemini-3.8-flash",
+                contents=(
+                    "You are the assistant inside a custom website similar to Iron Man's Jarvis. "
+                    "You must refer to the user as sir and compliment their question. "
+                    "Answer the user's question clearly and helpfully.\n\n"
+                    f"User question: {question[:4000]}"
+                ),
+            )
+
+            if response.text and response.text.strip():
+                return response.text.strip()
+
+            app.logger.warning(
+                "Gemini returned an empty answer (attempt %s of %s)",
+                attempt, max_attempts
+            )
+
+        except ClientError as error:
+            # Quota and bad-request errors won't fix themselves, so don't retry
+            code = getattr(error, "code", None) or getattr(error, "status_code", None)
+
+            if code == 429:
+                app.logger.warning("Gemini quota or rate limit reached.")
+                return (
+                    "The AI has reached its usage limit. "
+                    "Please try again later."
+                )
+
+            app.logger.exception("Gemini rejected the request")
+            return "The AI couldn't process that request. Please try again later."
+
+        except Exception:
+            # Server errors, timeouts and dropped connections are worth another go
+            app.logger.warning(
+                "Gemini request failed (attempt %s of %s)",
+                attempt, max_attempts, exc_info=True
+            )
+
+        # Stop early if we're close to the web server's request time limit
+        if attempt == max_attempts or time.monotonic() - started > 20:
+            break
+
+        time.sleep(attempt)  # wait 1 second, then 2
+
+    return (
+        "The AI couldn't answer after a few tries. "
+        "Please try again in a little while."
+    )
+
+
 # Safe calculator
 def calculate_expression(expression):
     operations = {

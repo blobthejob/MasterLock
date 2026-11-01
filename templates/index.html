@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 40;
+        const HTML_VERSION = 41;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -623,7 +623,7 @@
 
             <button type="submit">Go</button>
 
-            <button type="button" id="mic">Listen</button>
+            <button type="button" id="mic" title="Listen" aria-label="Listen"><span class="micIcon">&#x1F399;&#xFE0E;</span></button>
 
         </form>
 
@@ -2215,6 +2215,35 @@ const SpeechRecognition =
 let recognition = null;
 let listening = false;
 
+// Monochrome icons: U+FE0E asks for the text (single colour) version of each
+// emoji, which then takes on the button's text colour.
+const MIC_ICONS = {
+    idle: "\u{1F399}\uFE0E",         // studio microphone
+    listening: "\u23FA\uFE0E",       // record dot
+    unavailable: "\u{1F399}\uFE0E"   // microphone, struck through by CSS
+};
+
+const MIC_LABELS = {
+    idle: "Listen",
+    listening: "Listening - click to stop",
+    unavailable: "Microphone not available"
+};
+
+function setMic(state) {
+    const icon = document.createElement("span");
+
+    icon.className = "micIcon" +
+        (state === "listening" ? " live" : "") +
+        (state === "unavailable" ? " off" : "");
+    icon.textContent = MIC_ICONS[state];
+
+    mic.replaceChildren(icon);
+    mic.title = MIC_LABELS[state];
+    mic.setAttribute("aria-label", MIC_LABELS[state]);
+}
+
+setMic("idle");
+
 if (SpeechRecognition) {
 
     mic.addEventListener("click", function() {
@@ -2244,14 +2273,11 @@ if (SpeechRecognition) {
 
             listening = true;
 
-            mic.textContent = "Listening...";
+            setMic("listening");
 
             console.log("MICROPHONE STARTED");
 
         };
-
-       
-
 
 recognition.onresult = event => {
     let finalTranscript = "";
@@ -2384,7 +2410,7 @@ if (finalTranscript.trim()) {
 
             listening = false;
 
-            mic.textContent = "Listen";
+            setMic("idle");
 
         };
 
@@ -2394,7 +2420,7 @@ if (finalTranscript.trim()) {
 
             listening = false;
 
-            mic.textContent = "Listen";
+            setMic("idle");
 
             recognition = null;
 
@@ -2415,7 +2441,7 @@ if (finalTranscript.trim()) {
 
             listening = false;
 
-            mic.textContent = "Listen";
+            setMic("idle");
 
             recognition = null;
 
@@ -2427,7 +2453,7 @@ if (finalTranscript.trim()) {
 
     mic.disabled = true;
 
-    mic.textContent = "No mic";
+    setMic("unavailable");
 
     console.error(
         "SpeechRecognition is not supported."
@@ -2735,6 +2761,32 @@ function setupTicTacToe() {
         padding: 6px 8px !important;
         font-size: 12px !important;
     }
+}
+
+/* #monochrome mic icon */
+.micIcon {
+    font-variant-emoji: text;
+    display: inline-block;
+    font-size: 1.15em;
+    line-height: 1;
+}
+
+.micIcon.live {
+    animation: micPulse 1.2s ease-in-out infinite;
+}
+
+.micIcon.off {
+    opacity: 0.45;
+    text-decoration: line-through;
+}
+
+@keyframes micPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .micIcon.live { animation: none; }
 }
 
 </style>
