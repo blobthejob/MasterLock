@@ -765,7 +765,7 @@ UNLOCK_CODE ="everybody wants to rule the world"
 RESET_CODE ="reset puzzle"
 CODES = {
 
-   "nos ossos que aqui estamos, pelos vossos esperamos": {
+   "nos ossos que aqui estamos pelos vossos esperamos": {
        "text":"You've found the first clue:\n\nWhere you now stand, seek words of Latin stone\nUpon this place, a secret waits alone\nLook up and find the message carved in bone\nAnd speak its meaning once the words are known",
        "unlocks": ["melior est dies mortis die nativitatis"]
     },
@@ -775,7 +775,7 @@ CODES = {
        "unlocks": []
     }
 }
-START_UNLOCKED = ["nos ossos que aqui estamos, pelos vossos esperamos"]
+START_UNLOCKED = ["nos ossos que aqui estamos pelos vossos esperamos"]
 
 @app.route("/", methods=["GET","POST"])
 def home():
@@ -833,7 +833,7 @@ def home():
             "style"
         ]
 
-        code = re.sub(r"[^a-z0-9: ]", "", original.lower())
+        code = re.sub(r"[^a-z0-9: ]", "", original.lower().replace("{","").replace("}",""))
         compact_commands = [
             command for command in TYPO_TOLERANT_COMMANDS
             if len(command) >= 3
@@ -1145,9 +1145,7 @@ def home():
                 return jsonify({
                     "type": "result",
                     "text": (
-                        "Unknown language. Try: French, Spanish, "
-                        "German, Welsh, Latin, Japanese or another "
-                        "supported language."
+                        "Unknown language. Try: French, Spanish, \nGerman, Welsh, Latin, Japanese or another \nsupported language."
                     )
                 })
 
@@ -1217,10 +1215,6 @@ def home():
         elif code.startswith("cipher "):
 
             text = original[7:]
-
-            # If it already has one of the known prefixes,
-            # decrypt it.
-
             if any(
                 text.startswith(prefix)
                 for prefix in CIPHER_VARIANTS
@@ -1239,8 +1233,6 @@ def home():
                    "type":"result",
                    "text": decrypted
                 })
-
-            # Otherwise encrypt it.
 
             return jsonify({
                "type":"result",
@@ -1358,7 +1350,7 @@ def home():
                "text": text.swapcase()
             })
         
-        # #binary command
+        # binary command
         elif code.startswith("binary "):
             text = original[7:].strip()
             # Binary to text
@@ -1530,7 +1522,7 @@ def home():
         # Max navigation commands
 
         elif re.match(
-            r"^(?:max\s+)?(?:go to|open|show me|take me to|navigate to|launch)\s+",
+            r"^(?:max\s+)?(?:gochinese to|open|show me|take me to|navigate to|launch)\s+",
             code
         ):
             destination = re.sub(
