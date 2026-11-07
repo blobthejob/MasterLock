@@ -918,7 +918,7 @@ def home():
         elif code == "8675309":
             return jsonify({
                "type":"result",
-               "text":"Jenny, Jenny, here's my number:\n+447935307551\nNow I just need to make you mine..."
+               "text":"Jenny, Jenny, here's my number:\n+447935307551\nI need to make you mine..."
             })
         
         elif code in CODES:
@@ -1522,7 +1522,7 @@ def home():
         # Max navigation commands
 
         elif re.match(
-            r"^(?:max\s+)?(?:gochinese to|open|show me|take me to|navigate to|launch)\s+",
+            r"^(?:max\s+)?(?:go to|open|show me|take me to|navigate to|launch)\s+",
             code
         ):
             destination = re.sub(
