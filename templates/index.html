@@ -3,11 +3,14 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 46;
+        const HTML_VERSION = 47;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- QR code generator -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
        
@@ -1762,6 +1765,205 @@ closeCameraButton.addEventListener("click", async () => {
     cameraStatus.textContent = "Camera closed.";
 });
 
+/* #QR code generator */
+
+function generateQRCode(text) {
+
+    result.replaceChildren();
+
+    const heading = document.createElement("h2");
+    heading.textContent = "QR CODE";
+
+    const qrContainer = document.createElement("div");
+
+    qrContainer.style.background = "white";
+    qrContainer.style.padding = "15px";
+    qrContainer.style.display = "inline-block";
+    qrContainer.style.margin = "15px";
+
+    result.appendChild(heading);
+    result.appendChild(qrContainer);
+
+    if (typeof QRCode === "undefined") {
+        result.textContent = "QR library failed to load.";
+        return;
+    }
+
+    new QRCode(qrContainer, {
+        text: text,
+        width: 250,
+        height: 250,
+        correctLevel: QRCode.CorrectLevel.M
+    });
+
+    setTimeout(() => {
+
+        const canvas = qrContainer.querySelector("canvas");
+        const image = qrContainer.querySelector("img");
+
+        const download = document.createElement("a");
+
+        download.textContent = "Download QR Code";
+        download.style.display = "block";
+        download.style.margin = "15px";
+
+        if (canvas) {
+            download.href = canvas.toDataURL("image/png");
+        } else if (image) {
+            download.href = image.src;
+        } else {
+            return;
+        }
+
+        download.download = "master-lock-qr.png";
+
+        result.appendChild(download);
+
+    }, 100);
+}
+
+
+/* #weather */
+
+function weatherDescription(code) {
+
+    const descriptions = {
+        0: "Clear sky",
+        1: "Mainly clear",
+        2: "Partly cloudy",
+        3: "Overcast",
+        45: "Fog",
+        48: "Depositing rime fog",
+        51: "Light drizzle",
+        53: "Moderate drizzle",
+        55: "Dense drizzle",
+        61: "Light rain",
+        63: "Moderate rain",
+        65: "Heavy rain",
+        71: "Light snow",
+        73: "Moderate snow",
+        75: "Heavy snow",
+        80: "Rain showers",
+        81: "Moderate rain showers",
+        82: "Heavy rain showers",
+        95: "Thunderstorm",
+        96: "Thunderstorm with hail",
+        99: "Severe thunderstorm"
+    };
+
+    return descriptions[code] || "Unknown conditions";
+}
+
+
+async function showWeather(place) {
+
+    result.textContent = "Loading weather...";
+
+    try {
+
+        let latitude;
+        let longitude;
+        let locationName;
+
+        /* #find location */
+
+        if (place) {
+
+            const geoResponse = await fetch(
+                "https://geocoding-api.open-meteo.com/v1/search?name="
+                + encodeURIComponent(place)
+                + "&count=1&language=en&format=json"
+            );
+
+            if (!geoResponse.ok) {
+                throw new Error("Could not search for that location.");
+            }
+
+            const geoData = await geoResponse.json();
+
+            if (!geoData.results || !geoData.results.length) {
+                throw new Error("Location not found.");
+            }
+
+            const location = geoData.results[0];
+
+            latitude = location.latitude;
+            longitude = location.longitude;
+
+            locationName = location.name;
+
+            if (location.admin1) {
+                locationName += ", " + location.admin1;
+            }
+
+            if (location.country) {
+                locationName += ", " + location.country;
+            }
+
+        } else {
+
+            /* #browser location */
+
+            result.textContent = "Requesting location permission...";
+
+            const position = await new Promise((resolve, reject) => {
+
+                if (!navigator.geolocation) {
+                    reject(new Error("Location is not supported by this browser."));
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    resolve,
+                    reject,
+                    {
+                        enableHighAccuracy: false,
+                        timeout: 10000,
+                        maximumAge: 300000
+                    }
+                );
+
+            });
+
+            latitude = position.coords.latitude;
+            longitude = position.coords.longitude;
+
+            locationName = "Your location";
+        }
+
+        /* #get weather */
+
+        const weatherResponse = await fetch(
+            "https://api.open-meteo.com/v1/forecast"
+            + "?latitude=" + latitude
+            + "&longitude=" + longitude
+            + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m"
+            + "&timezone=auto"
+        );
+
+        if (!weatherResponse.ok) {
+            throw new Error("Weather service unavailable.");
+        }
+
+        const data = await weatherResponse.json();
+        const current = data.current;
+
+        result.textContent =
+            "WEATHER: " + locationName + "\n\n" +
+            weatherDescription(current.weather_code) + "\n\n" +
+            "Temperature: " + current.temperature_2m + "°C\n" +
+            "Feels like: " + current.apparent_temperature + "°C\n" +
+            "Humidity: " + current.relative_humidity_2m + "%\n" +
+            "Wind: " + current.wind_speed_10m + " km/h\n" +
+            "Precipitation: " + current.precipitation + " mm\n\n" +
+            "Updated: " + current.time;
+
+    } catch (error) {
+
+        result.textContent = "Weather error: " + error.message;
+
+    }
+}
 
 
 form.addEventListener("submit", async event => {
@@ -1903,13 +2105,13 @@ if (
     }
 
     if (cameraCommand === "photos") {
-        input.value = "";
-        result.textContent = "";
-        await showPhotos();
-        return;
-    }
-
+    input.value = "";
     result.textContent = "";
+    await showPhotos();
+    return;
+}
+
+result.textContent = "";
 
     // #drawing commands
     if (handleDrawCommand(submittedCommand)) {
@@ -1959,6 +2161,13 @@ if (!response.ok) {
     input.value = "";
     if (answer.type === "lock") {
         showLocked();
+        return;
+    }
+
+    // #QR code response
+
+    if (answer.type === "qr") {
+        generateQRCode(answer.text);
         return;
     }
 
