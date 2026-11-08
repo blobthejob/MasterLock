@@ -608,8 +608,43 @@
 </script>
 </head>
 
+
 <body>
+
+<!-- #terms and conditions -->
+
+<div id="termsOverlay">
+
+    <div id="termsBox">
+
+        <h1>Terms & Conditions</h1>
+
+        <div id="termsText">
+            <p>Welcome to Master Lock.</p>
+
+            <p>By accepting these terms, you agree to use
+            this application responsibly.</p>
+            <p>This application is provided for personal use.
+            You are responsible for how you use its features.</p>
+            <p>The application is provided as-is, without
+            guarantees that every feature will work perfectly.</p>
+            <p>By clicking Accept, you agree to these terms.</p>
+        </div>
+
+        <div id="termsButtons">
+
+            <button id="acceptTerms">Accept</button>
+
+            <button id="rejectTerms">Reject</button>
+
+        </div>
+
+    </div>
+
+</div>
+
 <div class="container">
+
 
     <div id="normalScreen">
 
@@ -711,6 +746,32 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <script>
+
+
+/* #terms and conditions */
+
+const termsOverlay = document.getElementById("termsOverlay");
+const acceptTermsButton = document.getElementById("acceptTerms");
+const rejectTermsButton = document.getElementById("rejectTerms");
+
+acceptTermsButton.addEventListener("click", () => {
+    termsOverlay.style.display = "none";
+});
+
+rejectTermsButton.addEventListener("click", () => {
+    window.close();
+
+    // Browsers may refuse to close the current tab.
+    // If that happens, hide the app instead.
+    termsOverlay.innerHTML = `
+        <div id="termsBox">
+            <h1>Access Denied</h1>
+            <p>You rejected the Terms & Conditions.</p>
+        </div>
+    `;
+});
+
+
 
 /* #drawing system */
 
@@ -3033,6 +3094,65 @@ function setupTicTacToe() {
 
 @media (prefers-reduced-motion: reduce) {
     .micIcon.live { animation: none; }
+}
+
+
+
+
+/* #terms overlay */
+
+#termsOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    background: black;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#termsBox {
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    background: #111;
+    border: 2px solid #333;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#termsText {
+    overflow-y: auto;
+    text-align: left;
+    line-height: 1.5;
+    flex: 1;
+}
+
+#termsButtons {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+#termsButtons button {
+    flex: 1;
+    margin: 0;
+}
+
+#rejectTerms {
+    background: #440000;
+    border-color: #660000;
+}
+
+#acceptTerms {
+    background: #003300;
+    border-color: #005500;
 }
 
 </style>
