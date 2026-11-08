@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 48;
+        const HTML_VERSION = 49;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -637,9 +637,7 @@
     <h2 id="gameTitle">GAME</h2>
     <p id="gameStatus">Ready.</p>
     <canvas id="gameCanvas" width="500" height="500"></canvas>
-    <div id="gameControls"></div>
-    <button type="button" id="restartGame">Restart</button>
-    
+    <div id="gameControls"></div>    
 </div>
 
 
@@ -2795,15 +2793,6 @@ function stopGame() {
     gameMenu.style.display = "none";
     gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 }
-
-document.getElementById("restartGame").addEventListener("click", () => {
-    if (activeGame) {
-        startGame({
-            game: activeGame,
-            players: gamePlayers
-        });
-    }
-});
 
 /* #close active tools */
 
