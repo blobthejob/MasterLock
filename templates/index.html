@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 47;
+        const HTML_VERSION = 48;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -1401,7 +1401,6 @@ const photoGallery = document.getElementById("photoGallery");
 
 const takePhotoButton = document.getElementById("takePhoto");
 const flipCameraButton = document.getElementById("flipCamera");
-const closeCameraButton = document.getElementById("closeCamera");
 
 let cameraScanner = null;
 let cameraRunning = false;
@@ -1757,13 +1756,6 @@ async function stopCamera() {
 
     photoVideo.srcObject = null;
 }
-
-closeCameraButton.addEventListener("click", async () => {
-    await stopCamera();
-    cameraMode = "";
-    cameraMenu.style.display = "none";
-    cameraStatus.textContent = "Camera closed.";
-});
 
 /* #QR code generator */
 
