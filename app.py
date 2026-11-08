@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 50
+version = 51
 
 
 from flask import Flask, render_template, request, jsonify
@@ -44,7 +44,6 @@ def get_colour(value):
 
 app = Flask(__name__)
 
-# AI answers for questions that are not recognised commands
 def ask_ai(question):
     api_key = os.environ.get("GEMINI_API_KEY")
 
@@ -53,31 +52,34 @@ def ask_ai(question):
 
     try:
         from google import genai
-        from google.genai.errors import ClientError
+        from google.genai.errors import ClientError, ServerError
         import time
 
         client = genai.Client(
             api_key=api_key,
-            http_options={"timeout": 10000}
+            http_options={"timeout": 15000}
         )
+
     except Exception:
         app.logger.exception("Could not start the Gemini client")
+
         return (
             "The AI is temporarily unavailable. "
             "Please try your question again later."
         )
 
-    max_attempts = 5
+    max_attempts = 2
     started = time.monotonic()
 
     for attempt in range(1, max_attempts + 1):
+
         try:
             response = client.models.generate_content(
                 model="gemini-3.8-flash",
                 contents=(
-                    "You are the assistant inside a custom website similar to Iron Man's Jarvis. "
-                    "You must refer to the user as sir and compliment their question. "
-                    "Answer the user's question clearly and helpfully.\n\n"
+                    "You are the assistant inside a custom website. "
+                    "Refer to the user as sir and compliment their question. "
+                    "Answer clearly and helpfully.\n\n"
                     f"User question: {question[:4000]}"
                 ),
             )
@@ -86,41 +88,78 @@ def ask_ai(question):
                 return response.text.strip()
 
             app.logger.warning(
-                "Gemini returned an empty answer (attempt %s of %s)",
-                attempt, max_attempts
+                "Gemini returned an empty answer "
+                "(attempt %s of %s)",
+                attempt,
+                max_attempts
             )
 
+        except ServerError as error:
+
+            code = getattr(error, "code", None)
+
+            if code == 504:
+                app.logger.warning(
+                    "Gemini timed out (attempt %s of %s)",
+                    attempt,
+                    max_attempts
+                )
+
+            else:
+                app.logger.warning(
+                    "Gemini server error: %s",
+                    error
+                )
+
         except ClientError as error:
-            # Quota and bad-request errors won't fix themselves, so don't retry
-            code = getattr(error, "code", None) or getattr(error, "status_code", None)
+
+            code = (
+                getattr(error, "code", None)
+                or getattr(error, "status_code", None)
+            )
 
             if code == 429:
-                app.logger.warning("Gemini quota or rate limit reached.")
+                app.logger.warning(
+                    "Gemini quota or rate limit reached."
+                )
+
                 return (
                     "The AI has reached its usage limit. "
                     "Please try again later."
                 )
 
-            app.logger.exception("Gemini rejected the request")
-            return "The AI couldn't process that request. Please try again later."
-
-        except Exception:
-            # Server errors, timeouts and dropped connections are worth another go
-            app.logger.warning(
-                "Gemini request failed (attempt %s of %s)",
-                attempt, max_attempts, exc_info=True
+            app.logger.exception(
+                "Gemini rejected the request"
             )
 
-        # Stop early if we're close to the web server's request time limit
-        if attempt == max_attempts or time.monotonic() - started > 20:
+            return (
+                "The AI couldn't process that request. "
+                "Please try again later."
+            )
+
+        except Exception:
+
+            app.logger.warning(
+                "Unexpected Gemini error (attempt %s of %s)",
+                attempt,
+                max_attempts,
+                exc_info=True
+            )
+
+        # Don't keep retrying if the request is taking too long
+        if (
+            attempt == max_attempts
+            or time.monotonic() - started > 20
+        ):
             break
 
-        time.sleep(attempt)  # wait 1 second, then 2
+        time.sleep(1)
 
     return (
-        "The AI couldn't answer after a few tries. "
-        "Please try again in a little while."
+        "Gemini is taking too long to respond. "
+        "Please try again shortly."
     )
+
 
 
 # Safe calculator
