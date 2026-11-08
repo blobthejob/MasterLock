@@ -759,18 +759,9 @@ acceptTermsButton.addEventListener("click", () => {
 });
 
 rejectTermsButton.addEventListener("click", () => {
-    window.close();
-
-    // Browsers may refuse to close the current tab.
-    // If that happens, hide the app instead.
-    termsOverlay.innerHTML = `
-        <div id="termsBox">
-            <h1>Access Denied</h1>
-            <p>You rejected the Terms & Conditions.</p>
-        </div>
-    `;
+    termsOverlay.style.display = "none";
+    showLocked();
 });
-
 
 
 /* #drawing system */
