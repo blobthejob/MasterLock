@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 49;
+        const HTML_VERSION = 50;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -1971,7 +1971,29 @@ form.addEventListener("submit", async event => {
 
     const submittedCommand = input.value.trim();
 
-// Close open tools before processing the command
+// #drawing commands stay open
+
+const drawCommand = submittedCommand.toLowerCase().trim();
+
+const isDrawingCommand =
+    drawCommand === "exit draw" ||
+    drawCommand === "save drawing" ||
+    drawCommand === "clear drawing" ||
+    drawCommand === "undo" ||
+    /^color\s+.+$/.test(drawCommand) ||
+    /^fill\s+.+$/.test(drawCommand) ||
+    /^tool\s+(pen|eraser|line|rectangle|circle|fill)$/.test(drawCommand) ||
+    /^size\s+\d+$/.test(drawCommand);
+
+if (drawingOpen && isDrawingCommand) {
+
+    handleDrawCommand(submittedCommand);
+    input.value = "";
+    return;
+
+}
+
+// Close other active tools before processing commands
 await closeActiveTools();
 
 // #clear old output for camera commands
