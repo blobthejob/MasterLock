@@ -639,7 +639,7 @@
     <canvas id="gameCanvas" width="500" height="500"></canvas>
     <div id="gameControls"></div>
     <button type="button" id="restartGame">Restart</button>
-    <button type="button" id="closeGame">Return to Master Lock</button>
+    
 </div>
 
 
@@ -667,7 +667,7 @@
     <!-- Saved photos -->
     <div id="photoGallery" style="display: none;"></div>
 
-    <button type="button" id="closeCamera">Close</button>
+    
 </div>
 
 <!-- #drawing menu -->
@@ -1981,8 +1981,10 @@ form.addEventListener("submit", async event => {
 
     const submittedCommand = input.value.trim();
 
-// #clear old output for camera commands
+// Close open tools before processing the command
+await closeActiveTools();
 
+// #clear old output for camera commands
 const cameraCommand = submittedCommand.toLowerCase().trim();
 
 if (
@@ -2802,8 +2804,6 @@ function stopGame() {
     gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 }
 
-document.getElementById("closeGame").addEventListener("click", stopGame);
-
 document.getElementById("restartGame").addEventListener("click", () => {
     if (activeGame) {
         startGame({
@@ -2812,6 +2812,31 @@ document.getElementById("restartGame").addEventListener("click", () => {
         });
     }
 });
+
+/* #close active tools */
+
+async function closeActiveTools() {
+
+    // Close game
+    if (gameMenu.style.display !== "none") {
+        stopGame();
+    }
+
+    // Close drawing mode without clearing the drawing
+    if (drawingOpen) {
+        closeDrawMenu();
+    }
+
+    // Close camera and stop its stream
+    if (cameraMenu.style.display !== "none") {
+        await stopCamera();
+
+        cameraMode = "";
+        cameraMenu.style.display = "none";
+        cameraStatus.textContent = "Camera closed.";
+    }
+
+}
 
 /* #tic tac toe */
 
