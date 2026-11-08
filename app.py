@@ -3,7 +3,6 @@
 version = 50
 
 
-from email.message import EmailMessage
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
 from datetime import datetime
@@ -68,7 +67,7 @@ def ask_ai(question):
             "Please try your question again later."
         )
 
-    max_attempts = 3
+    max_attempts = 5
     started = time.monotonic()
 
     for attempt in range(1, max_attempts + 1):
