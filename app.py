@@ -3,6 +3,7 @@
 version = 51
 
 
+from email.message import EmailMessage
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import quote
 from datetime import datetime
@@ -18,6 +19,95 @@ import statistics
 import os
 import smtplib
 import ssl
+
+
+# #master lock email notifications
+
+def send_masterlock_email(message):
+    import urllib.request
+    import urllib.error
+
+    api_key = os.environ.get("BREVO_API_KEY")
+    sender_email = os.environ.get("BREVO_SENDER_EMAIL")
+    recipient_email = os.environ.get("NOTIFY_EMAIL")
+
+    if not api_key or not sender_email or not recipient_email:
+        app.logger.error("Notification settings are missing.")
+        return False
+
+    timestamp = datetime.now(
+        ZoneInfo("Europe/London")
+    ).strftime("%d/%m/%Y %H:%M:%S")
+
+    # #sender information
+    sender_ip = request.remote_addr or "Unavailable"
+
+    user_agent = request.headers.get(
+        "User-Agent",
+        "Unavailable"
+    )
+
+    email_data = {
+        "sender": {
+            "name": "Master Lock",
+            "email": sender_email
+        },
+        "to": [
+            {"email": recipient_email}
+        ],
+        "subject": "MASTER LOCK ALERT",
+        "textContent": (
+            "A Master Lock notification was triggered.\n\n"
+            f"Time: {timestamp}\n"
+            f"Message: {message[:1000]}\n"
+            f"IP address: {sender_ip}\n"
+            f"Browser/device details: {user_agent[:500]}"
+        )
+    }
+
+    # #send email through Brevo
+    brevo_request = urllib.request.Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=json.dumps(email_data).encode("utf-8"),
+        headers={
+            "accept": "application/json",
+            "api-key": api_key,
+            "content-type": "application/json"
+        },
+        method="POST"
+    )
+
+    try:
+        with urllib.request.urlopen(
+            brevo_request,
+            timeout=15
+        ) as response:
+
+            if response.status in (200, 201, 202):
+                app.logger.info(
+                    "Notification request accepted."
+                )
+                return True
+
+            app.logger.error(
+                "Notification API returned status %s.",
+                response.status
+            )
+            return False
+
+    except urllib.error.HTTPError as error:
+        app.logger.error(
+            "Notification API rejected request: HTTP %s.",
+            error.code
+        )
+        return False
+
+    except Exception:
+        app.logger.exception(
+            "Notification request failed."
+        )
+        return False
+
 
 
 COLOURS = {
@@ -44,6 +134,7 @@ def get_colour(value):
 
 app = Flask(__name__)
 
+# AI answers for questions that are not recognised commands
 def ask_ai(question):
     api_key = os.environ.get("GEMINI_API_KEY")
 
@@ -52,34 +143,31 @@ def ask_ai(question):
 
     try:
         from google import genai
-        from google.genai.errors import ClientError, ServerError
+        from google.genai.errors import ClientError
         import time
 
         client = genai.Client(
             api_key=api_key,
-            http_options={"timeout": 15000}
+            http_options={"timeout": 10000}
         )
-
     except Exception:
         app.logger.exception("Could not start the Gemini client")
-
         return (
             "The AI is temporarily unavailable. "
             "Please try your question again later."
         )
 
-    max_attempts = 2
+    max_attempts = 3
     started = time.monotonic()
 
     for attempt in range(1, max_attempts + 1):
-
         try:
             response = client.models.generate_content(
                 model="gemini-3.8-flash",
                 contents=(
-                    "You are the assistant inside a custom website. "
-                    "Refer to the user as sir and compliment their question. "
-                    "Answer clearly and helpfully.\n\n"
+                    "You are the assistant inside a custom website similar to Iron Man's Jarvis. "
+                    "You must refer to the user as sir and compliment their question. "
+                    "Answer the user's question clearly and helpfully.\n\n"
                     f"User question: {question[:4000]}"
                 ),
             )
@@ -88,78 +176,41 @@ def ask_ai(question):
                 return response.text.strip()
 
             app.logger.warning(
-                "Gemini returned an empty answer "
-                "(attempt %s of %s)",
-                attempt,
-                max_attempts
+                "Gemini returned an empty answer (attempt %s of %s)",
+                attempt, max_attempts
             )
-
-        except ServerError as error:
-
-            code = getattr(error, "code", None)
-
-            if code == 504:
-                app.logger.warning(
-                    "Gemini timed out (attempt %s of %s)",
-                    attempt,
-                    max_attempts
-                )
-
-            else:
-                app.logger.warning(
-                    "Gemini server error: %s",
-                    error
-                )
 
         except ClientError as error:
-
-            code = (
-                getattr(error, "code", None)
-                or getattr(error, "status_code", None)
-            )
+            # Quota and bad-request errors won't fix themselves, so don't retry
+            code = getattr(error, "code", None) or getattr(error, "status_code", None)
 
             if code == 429:
-                app.logger.warning(
-                    "Gemini quota or rate limit reached."
-                )
-
+                app.logger.warning("Gemini quota or rate limit reached.")
                 return (
                     "The AI has reached its usage limit. "
                     "Please try again later."
                 )
 
-            app.logger.exception(
-                "Gemini rejected the request"
-            )
-
-            return (
-                "The AI couldn't process that request. "
-                "Please try again later."
-            )
+            app.logger.exception("Gemini rejected the request")
+            return "The AI couldn't process that request. Please try again later."
 
         except Exception:
-
+            # Server errors, timeouts and dropped connections are worth another go
             app.logger.warning(
-                "Unexpected Gemini error (attempt %s of %s)",
-                attempt,
-                max_attempts,
-                exc_info=True
+                "Gemini request failed (attempt %s of %s)",
+                attempt, max_attempts, exc_info=True
             )
 
-        # Don't keep retrying if the request is taking too long
-        if (
-            attempt == max_attempts
-            or time.monotonic() - started > 20
-        ):
+        # Stop early if we're close to the web server's request time limit
+        if attempt == max_attempts or time.monotonic() - started > 20:
             break
 
-        time.sleep(1)
+        time.sleep(attempt)  # wait 1 second, then 2
 
     return (
-        "Gemini is taking too long to respond. "
-        "Please try again shortly."
+        "The AI couldn't answer after a few tries. "
+        "Please try again in a little while."
     )
-
 
 
 # Safe calculator
@@ -780,7 +831,8 @@ def home():
             "max",
             "help",
             "style",
-            "qr"
+            "python",
+            "css"
         ]
 
         code = re.sub(r"[^a-z0-9: ]", "", original.lower().replace("{","").replace("}",""))
@@ -827,6 +879,12 @@ def home():
                         )
         
         locked = request.form.get("locked") =="true"
+
+        
+        # #notify every non-empty command
+        if not locked and code:
+            send_masterlock_email(original)
+
         if locked and code == RESET_CODE.lower():
             return jsonify({
                "type":"reset"
@@ -862,7 +920,7 @@ def home():
         elif code == "8675309":
             return jsonify({
                "type":"result",
-               "text":"Jenny, Jenny, here's my number:\n+447935307551\nI need to make you mine..."
+               "text":"Jenny, Jenny, here's my number:\n+447935307551\nNow I just need to make you mine..."
             })
         
         elif code in CODES:
@@ -1466,7 +1524,7 @@ def home():
         # Max navigation commands
 
         elif re.match(
-            r"^(?:max\s+)?(?:go to|open|show me|take me to|navigate to|launch)\s+",
+            r"^(?:max\s+)?(?:gochinese to|open|show me|take me to|navigate to|launch)\s+",
             code
         ):
             destination = re.sub(
@@ -1476,7 +1534,7 @@ def home():
                 flags=re.IGNORECASE
             ).strip()
 
-            if not destination:
+            if not destination:chinese
                 return jsonify({
                     "type": "result",
                     "text": "Please specify where you want me to go."
@@ -1504,29 +1562,6 @@ def home():
                 "type": "url",
                 "url": destination_url
             })
-        
-        # QR code generator
-        elif code.startswith("qr "):
-
-            qr_text = original[3:].strip()
-
-            if not qr_text:
-                return jsonify({
-                    "type": "result",
-                    "text": "Enter some text after [qr ]"
-                })
-
-            if len(qr_text) > 1500:
-                return jsonify({
-                    "type": "result",
-                    "text": "QR text is too long."
-                })
-
-            return jsonify({
-                "type": "qr",
-                "text": qr_text
-            })
-        
         elif code.startswith("ai "):
             text = original[3:]
             return jsonify({
@@ -1536,13 +1571,26 @@ def home():
         elif code == "help":
             return jsonify({
                 "type":"result",
-                "text":"Use commands like: \n[about] for version and status \n[date] for system date and time \n[ai _] to ask the AI a query \n[translate _] to translate to a language \n[yt _] to open youtube \n[g _] to open google \n[wiki _] to open wikipedia \n[upper _] to change the text to UPPERCASE \n[lower _] to change the text to lowercase \n[binary _] to convert to/from UTF-8 \n[bg {color}] to change the color of the background \n[text {color}] to change the color of the text \n[btn {color}] to change the color of the buttons \n[mean {list,2,3,etc}] to get the mean of a sequence \n[median {list,2,3,etc}] to get the median of a sequence \n[mode {list,2,3,etc}] to get the mode of a sequence \n[range {list,2,3,etc}] to get the range of a sequence \n[sum {list,2,3,etc}] to get the sum of a sequence \n[nth {list,2,3,etc}] to get the nth term of a sequence \n[calc {a+-/*b}] to calculate a result of an equation \n[camera] to access the camera \n[qr _] to generate a qr-code \n[photos] to open photos saved from [camera]"
+                "text":"Use commands like: \n[about] for version and status \n[date] for system date and time \n[ai _] to ask the AI a query \n[translate _] to translate to a language \n[yt _] to open youtube \n[g _] to open google \n[wiki _] to open wikipedia \n[upper _] to change the text to UPPERCASE \n[lower _] to change the text to lowercase \n[binary _] to convert to/from UTF-8 \n[bg {color}] to change the color of the background \n[text {color}] to change the color of the text \n[btn {color}] to change the color of the buttons \n[mean {list,2,3,etc}] to get the mean of a sequence \n[median {list,2,3,etc}] to get the median of a sequence \n[mode {list,2,3,etc}] to get the mode of a sequence \n[range {list,2,3,etc}] to get the range of a sequence \n[sum {list,2,3,etc}] to get the sum of a sequence \n[nth {list,2,3,etc}] to get the nth term of a sequence \n[calc {a+-/*b}] to calculate a result of an equation \n[camera] to access the camera"
             })
         
         elif code == "style" or code.startswith("style "):
             return jsonify({
                 "type": "style",
                 "name": code[5:].strip()
+            })
+        elif original.lower().startswith("css "):
+            css_code = original[4:].strip()
+            return jsonify({
+                "type": "css",
+                "code": css_code,
+                "result": "CSS received."
+            })
+        elif original.lower().startswith("python "):
+            python_code = original[7:].strip()
+            return jsonify({
+                "type": "result",
+                "text": "Python command recognised: " + python_code
             })
 
         else:

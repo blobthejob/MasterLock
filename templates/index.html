@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 50;
+        const HTML_VERSION = 52;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -372,22 +372,6 @@
 (function () {
     "use strict";
 
-    /* ============================================================
-       STYLE PRESETS  -  type  style <name>  to use one
-       ------------------------------------------------------------
-       Only bg, text and accent are required. Everything else is
-       optional and falls back to a sensible default:
-
-         bg         page background          text       main text colour
-         accent     borders and lines        panel      command bar background
-         inputBg / inputText / inputBorder / inputFocus
-         btnBg / btnText / btnBorder / btnHover
-         codeBg / codeText                   canvasBg   game board background
-         font       font-family              glow       text glow colour
-         bgImage    CSS gradient over the background
-
-       TO ADD YOUR OWN: copy a block below, rename it, change colours.
-       ============================================================ */
     const STYLE_PRESETS = {
 
         dark: {
@@ -3032,6 +3016,98 @@ function setupTicTacToe() {
 }
 
 
+/* #code console */
+
+// Python environment
+let pythonRuntime = null;
+let pythonLoading = false;
+
+// Load Python only when needed
+async function loadPython() {
+
+    if (pythonRuntime) {
+        return pythonRuntime;
+    }
+
+    if (pythonLoading) {
+        while (pythonLoading) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        return pythonRuntime;
+    }
+
+    pythonLoading = true;
+
+    try {
+
+        pythonRuntime = await loadPyodide();
+
+        return pythonRuntime;
+
+    } finally {
+
+        pythonLoading = false;
+
+    }
+
+}
+
+
+// Run Python code
+async function runPython(code) {
+
+    try {
+
+        const pyodide = await loadPython();
+
+        const result = await pyodide.runPythonAsync(`
+import io
+import sys
+
+_output = io.StringIO()
+_old_stdout = sys.stdout
+sys.stdout = _output
+
+try:
+    exec(${JSON.stringify(code)})
+finally:
+    sys.stdout = _old_stdout
+
+_output.getvalue()
+`);
+
+        return result || "Python executed successfully.";
+
+    } catch (error) {
+
+        return "Python error: " + error.message;
+
+    }
+
+}
+
+
+// Run CSS
+function runCSS(code) {
+
+    const style = document.getElementById("masterCustomCSS");
+
+    try {
+
+        style.textContent = code;
+
+        return "CSS injected successfully.";
+
+    } catch (error) {
+
+        return "CSS error: " + error.message;
+
+    }
+
+}
+
+
 </script>
 <style>
 
@@ -3149,6 +3225,11 @@ function setupTicTacToe() {
 }
 
 </style>
+
+<!-- #custom css -->
+
+<style id="masterCustomCSS"></style>
+
 
 </body>
 </html>
