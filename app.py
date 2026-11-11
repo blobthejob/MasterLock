@@ -21,95 +21,6 @@ import smtplib
 import ssl
 
 
-# #master lock email notifications
-
-def send_masterlock_email(message):
-    import urllib.request
-    import urllib.error
-
-    api_key = os.environ.get("BREVO_API_KEY")
-    sender_email = os.environ.get("BREVO_SENDER_EMAIL")
-    recipient_email = os.environ.get("NOTIFY_EMAIL")
-
-    if not api_key or not sender_email or not recipient_email:
-        app.logger.error("Notification settings are missing.")
-        return False
-
-    timestamp = datetime.now(
-        ZoneInfo("Europe/London")
-    ).strftime("%d/%m/%Y %H:%M:%S")
-
-    # #sender information
-    sender_ip = request.remote_addr or "Unavailable"
-
-    user_agent = request.headers.get(
-        "User-Agent",
-        "Unavailable"
-    )
-
-    email_data = {
-        "sender": {
-            "name": "Master Lock",
-            "email": sender_email
-        },
-        "to": [
-            {"email": recipient_email}
-        ],
-        "subject": "MASTER LOCK ALERT",
-        "textContent": (
-            "A Master Lock notification was triggered.\n\n"
-            f"Time: {timestamp}\n"
-            f"Message: {message[:1000]}\n"
-            f"IP address: {sender_ip}\n"
-            f"Browser/device details: {user_agent[:500]}"
-        )
-    }
-
-    # #send email through Brevo
-    brevo_request = urllib.request.Request(
-        "https://api.brevo.com/v3/smtp/email",
-        data=json.dumps(email_data).encode("utf-8"),
-        headers={
-            "accept": "application/json",
-            "api-key": api_key,
-            "content-type": "application/json"
-        },
-        method="POST"
-    )
-
-    try:
-        with urllib.request.urlopen(
-            brevo_request,
-            timeout=15
-        ) as response:
-
-            if response.status in (200, 201, 202):
-                app.logger.info(
-                    "Notification request accepted."
-                )
-                return True
-
-            app.logger.error(
-                "Notification API returned status %s.",
-                response.status
-            )
-            return False
-
-    except urllib.error.HTTPError as error:
-        app.logger.error(
-            "Notification API rejected request: HTTP %s.",
-            error.code
-        )
-        return False
-
-    except Exception:
-        app.logger.exception(
-            "Notification request failed."
-        )
-        return False
-
-
-
 COLOURS = {
    "black":"black",
    "white":"white",
@@ -880,11 +791,6 @@ def home():
         
         locked = request.form.get("locked") =="true"
 
-        
-        # #notify every non-empty command
-        if not locked and code:
-            send_masterlock_email(original)
-
         if locked and code == RESET_CODE.lower():
             return jsonify({
                "type":"reset"
@@ -1534,7 +1440,7 @@ def home():
                 flags=re.IGNORECASE
             ).strip()
 
-            if not destination:chinese
+            if not destination:
                 return jsonify({
                     "type": "result",
                     "text": "Please specify where you want me to go."
