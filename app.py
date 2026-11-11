@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 52
+version = 53
 
 
 from email.message import EmailMessage
@@ -953,7 +953,8 @@ def home():
             "max",
             "help",
             "style",
-            "python"
+            "python",
+            "css"
         ]
 
         code = re.sub(r"[^a-z0-9: ]", "", original.lower().replace("{","").replace("}",""))
@@ -1707,6 +1708,14 @@ def home():
             return jsonify({
                 "type": "result",
                 "text": result
+            })
+        
+        elif original.lower().startswith("css "):
+            css_code = original[4:].strip()
+            return jsonify({
+                "type": "css",
+                "code": css_code,
+                "result": "CSS activated."
             })
         
         else:

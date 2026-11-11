@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 56;
+        const HTML_VERSION = 57;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -2274,6 +2274,17 @@ if (!response.ok) {
         });
 
         localStorage.setItem("master_input", answer.value);
+    }
+
+    if (typeof answer.code === "string") {
+
+        const customCSS = document.getElementById("masterCustomCSS");
+
+        customCSS.textContent = answer.code;
+
+        result.textContent = answer.result || "CSS activated.";
+
+        return;
     }
 }
 
