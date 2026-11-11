@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 55;
+        const HTML_VERSION = 56;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -2742,6 +2742,20 @@ if (finalTranscript.trim()) {
 
 input.addEventListener("keydown", event => {
 
+    if (event.key === "Tab") {
+        event.preventDefault();
+
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+
+        input.value =
+            input.value.substring(0, start) +
+            "    " +
+            input.value.substring(end);
+
+        input.selectionStart = input.selectionEnd = start + 4;
+        return;
+    }
     // #enter runs command
     if (event.key === "Enter" && !event.shiftKey) {
 
