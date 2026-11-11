@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 51
+version = 52
 
 
 from email.message import EmailMessage
@@ -113,6 +113,41 @@ def run_python_command(source, session_id):
                 raise ValueError("The result is too large.")
 
             return result
+                if isinstance(node, ast.Compare):
+            left = evaluate(node.left)
+
+            comparisons = {
+                ast.Eq: operator.eq,
+                ast.NotEq: operator.ne,
+                ast.Lt: operator.lt,
+                ast.LtE: operator.le,
+                ast.Gt: operator.gt,
+                ast.GtE: operator.ge
+            }
+
+            for op, comparator in zip(node.ops, node.comparators):
+                comparison = comparisons.get(type(op))
+
+                if comparison is None:
+                    raise ValueError("That comparison is not supported.")
+
+                right = evaluate(comparator)
+
+                if not comparison(left, right):
+                    return False
+
+                left = right
+
+            return True
+
+        if isinstance(node, ast.BoolOp):
+            if isinstance(node.op, ast.And):
+                return all(bool(evaluate(value)) for value in node.values)
+
+            if isinstance(node.op, ast.Or):
+                return any(bool(evaluate(value)) for value in node.values)
+
+            raise ValueError("That logical operator is not supported.")
 
         if isinstance(node, ast.UnaryOp):
             value = evaluate(node.operand)
@@ -149,66 +184,78 @@ def run_python_command(source, session_id):
 
         tree = ast.parse(source, mode="exec")
 
-        for statement in tree.body:
+                def execute_statements(statements):
 
-            # Variable assignment: name = value
-            if isinstance(statement, ast.Assign):
+            for statement in statements:
 
-                if len(statement.targets) != 1:
-                    raise ValueError("Only one variable can be assigned at a time.")
+                if isinstance(statement, ast.Assign):
 
-                target = statement.targets[0]
+                    if len(statement.targets) != 1:
+                        raise ValueError("Only one variable can be assigned at a time.")
 
-                if not isinstance(target, ast.Name):
-                    raise ValueError("Use a simple variable name.")
+                    target = statement.targets[0]
 
-                if not target.id.isidentifier():
-                    raise ValueError("Invalid variable name.")
+                    if not isinstance(target, ast.Name):
+                        raise ValueError("Use a simple variable name.")
 
-                variables[target.id] = evaluate(statement.value)
+                    if not target.id.isidentifier():
+                        raise ValueError("Invalid variable name.")
 
-            # Output: print(...)
-            elif isinstance(statement, ast.Expr):
+                    variables[target.id] = evaluate(statement.value)
 
-                expression = statement.value
+                elif isinstance(statement, ast.Expr):
 
-                if (
-                    isinstance(expression, ast.Call)
-                    and isinstance(expression.func, ast.Name)
-                    and expression.func.id == "print"
-                ):
+                    expression = statement.value
 
-                    if len(expression.args) > 20:
-                        raise ValueError("Too many print arguments.")
+                    if (
+                        isinstance(expression, ast.Call)
+                        and isinstance(expression.func, ast.Name)
+                        and expression.func.id == "print"
+                    ):
 
-                    values = [
-                        str(evaluate(argument))
-                        for argument in expression.args
-                    ]
+                        if len(expression.args) > 20:
+                            raise ValueError("Too many print arguments.")
 
-                    separator = " "
-                    ending = "\n"
+                        values = [
+                            str(evaluate(argument))
+                            for argument in expression.args
+                        ]
 
-                    for keyword in expression.keywords:
+                        separator = " "
+                        ending = "\n"
 
-                        if keyword.arg == "sep":
-                            separator = str(evaluate(keyword.value))
+                        for keyword in expression.keywords:
 
-                        elif keyword.arg == "end":
-                            ending = str(evaluate(keyword.value))
+                            if keyword.arg == "sep":
+                                separator = str(evaluate(keyword.value))
 
-                        else:
-                            raise ValueError("Unsupported print option.")
+                            elif keyword.arg == "end":
+                                ending = str(evaluate(keyword.value))
 
-                    output.append(separator.join(values) + ending)
+                            else:
+                                raise ValueError("Unsupported print option.")
+
+                        output.append(separator.join(values) + ending)
+
+                    else:
+                        output.append(str(evaluate(expression)))
+
+                elif isinstance(statement, ast.If):
+
+                    if evaluate(statement.test):
+                        execute_statements(statement.body)
+                    else:
+                        execute_statements(statement.orelse)
+
+                elif isinstance(statement, ast.Pass):
+                    continue
 
                 else:
-                    output.append(str(evaluate(expression)))
+                    raise ValueError(
+                        "That Python statement is not supported yet."
+                    )
 
-            else:
-                raise ValueError(
-                    "That Python statement is not supported yet."
-                )
+        execute_statements(tree.body)
 
         if output:
             return "".join(output).rstrip("\n")
