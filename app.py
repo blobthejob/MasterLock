@@ -113,30 +113,20 @@ def run_python_command(source, session_id):
                 raise ValueError("The result is too large.")
 
             return result
-                if isinstance(node, ast.Compare):
-            left = evaluate(node.left)
+            if isinstance(node, ast.Compare):
 
-            comparisons = {
-                ast.Eq: operator.eq,
-                ast.NotEq: operator.ne,
-                ast.Lt: operator.lt,
-                ast.LtE: operator.le,
-                ast.Gt: operator.gt,
-                ast.GtE: operator.ge
-            }
+                for op, comparator in zip(node.ops, node.comparators):
+                    comparison = comparisons.get(type(op))
 
-            for op, comparator in zip(node.ops, node.comparators):
-                comparison = comparisons.get(type(op))
+                    if comparison is None:
+                        raise ValueError("That comparison is not supported.")
 
-                if comparison is None:
-                    raise ValueError("That comparison is not supported.")
+                    right = evaluate(comparator)
 
-                right = evaluate(comparator)
+                    if not comparison(left, right):
+                        return False
 
-                if not comparison(left, right):
-                    return False
-
-                left = right
+                    left = right
 
             return True
 
@@ -184,7 +174,7 @@ def run_python_command(source, session_id):
 
         tree = ast.parse(source, mode="exec")
 
-                def execute_statements(statements):
+        def execute_statements(statements):
 
             for statement in statements:
 
