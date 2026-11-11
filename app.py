@@ -45,6 +45,180 @@ def get_colour(value):
 
 app = Flask(__name__)
 
+# #python interpreter
+
+python_sessions = {}
+
+def run_python_command(source, session_id):
+
+    if not session_id or len(session_id) > 100:
+        return "Python session error. Reload the page and try again."
+
+    # Keep each browser session's variables separate
+    if session_id not in python_sessions:
+        if len(python_sessions) >= 500:
+            oldest_session = next(iter(python_sessions))
+            del python_sessions[oldest_session]
+
+        python_sessions[session_id] = {}
+
+    variables = python_sessions[session_id]
+    output = []
+
+    # Only allow a small, safe set of Python operations
+    allowed_operators = {
+        ast.Add: operator.add,
+        ast.Sub: operator.sub,
+        ast.Mult: operator.mul,
+        ast.Div: operator.truediv,
+        ast.FloorDiv: operator.floordiv,
+        ast.Mod: operator.mod
+    }
+
+    def evaluate(node):
+
+        if isinstance(node, ast.Constant):
+            if isinstance(node.value, (str, int, float, bool, type(None))):
+                return node.value
+            raise ValueError("That value type is not supported.")
+
+        if isinstance(node, ast.Name):
+            if node.id in variables:
+                return variables[node.id]
+            raise ValueError("Name '" + node.id + "' is not defined.")
+
+        if isinstance(node, ast.BinOp):
+            operation = allowed_operators.get(type(node.op))
+
+            if operation is None:
+                raise ValueError("That operator is not supported.")
+
+            left = evaluate(node.left)
+            right = evaluate(node.right)
+
+            if isinstance(node.op, ast.Mult):
+                if isinstance(left, str) and isinstance(right, int):
+                    if abs(right) > 1000:
+                        raise ValueError("That operation is too large.")
+                elif isinstance(right, str) and isinstance(left, int):
+                    if abs(left) > 1000:
+                        raise ValueError("That operation is too large.")
+
+            if isinstance(node.op, ast.Pow):
+                raise ValueError("Power operations are not supported yet.")
+
+            result = operation(left, right)
+
+            if isinstance(result, (str, list, tuple)) and len(result) > 10000:
+                raise ValueError("The result is too large.")
+
+            return result
+
+        if isinstance(node, ast.UnaryOp):
+            value = evaluate(node.operand)
+
+            if isinstance(node.op, ast.USub):
+                return -value
+
+            if isinstance(node.op, ast.UAdd):
+                return +value
+
+            if isinstance(node.op, ast.Not):
+                return not value
+
+            raise ValueError("That operation is not supported.")
+
+        if isinstance(node, ast.List):
+            return [evaluate(item) for item in node.elts]
+
+        if isinstance(node, ast.Tuple):
+            return tuple(evaluate(item) for item in node.elts)
+
+        if isinstance(node, ast.Dict):
+            return {
+                evaluate(key): evaluate(value)
+                for key, value in zip(node.keys, node.values)
+            }
+
+        raise ValueError("That Python expression is not supported.")
+
+    try:
+
+        if len(source) > 2000:
+            return "Python error: command is too long."
+
+        tree = ast.parse(source, mode="exec")
+
+        for statement in tree.body:
+
+            # Variable assignment: name = value
+            if isinstance(statement, ast.Assign):
+
+                if len(statement.targets) != 1:
+                    raise ValueError("Only one variable can be assigned at a time.")
+
+                target = statement.targets[0]
+
+                if not isinstance(target, ast.Name):
+                    raise ValueError("Use a simple variable name.")
+
+                if not target.id.isidentifier():
+                    raise ValueError("Invalid variable name.")
+
+                variables[target.id] = evaluate(statement.value)
+
+            # Output: print(...)
+            elif isinstance(statement, ast.Expr):
+
+                expression = statement.value
+
+                if (
+                    isinstance(expression, ast.Call)
+                    and isinstance(expression.func, ast.Name)
+                    and expression.func.id == "print"
+                ):
+
+                    if len(expression.args) > 20:
+                        raise ValueError("Too many print arguments.")
+
+                    values = [
+                        str(evaluate(argument))
+                        for argument in expression.args
+                    ]
+
+                    separator = " "
+                    ending = "\n"
+
+                    for keyword in expression.keywords:
+
+                        if keyword.arg == "sep":
+                            separator = str(evaluate(keyword.value))
+
+                        elif keyword.arg == "end":
+                            ending = str(evaluate(keyword.value))
+
+                        else:
+                            raise ValueError("Unsupported print option.")
+
+                    output.append(separator.join(values) + ending)
+
+                else:
+                    output.append(str(evaluate(expression)))
+
+            else:
+                raise ValueError(
+                    "That Python statement is not supported yet."
+                )
+
+        if output:
+            return "".join(output).rstrip("\n")
+
+        return "Python executed successfully."
+
+    except Exception as error:
+        return "Python error: " + str(error)
+    
+
 # AI answers for questions that are not recognised commands
 def ask_ai(question):
     api_key = os.environ.get("GEMINI_API_KEY")
@@ -1485,6 +1659,19 @@ def home():
                 "type": "style",
                 "name": code[5:].strip()
             })
+                # #python command
+
+        elif original.lower().startswith("python "):
+            python_code = original[7:].strip()
+            python_session = request.form.get("python_session", "")
+            result = run_python_command(
+                python_code,
+                python_session
+            )
+            return jsonify({
+                "type": "result",
+                "text": result
+            })
         elif original.lower().startswith("css "):
             css_code = original[4:].strip()
             return jsonify({
@@ -1492,13 +1679,7 @@ def home():
                 "code": css_code,
                 "result": "CSS received."
             })
-        elif original.lower().startswith("python "):
-            python_code = original[7:].strip()
-            return jsonify({
-                "type": "result",
-                "text": "Python command recognised: " + python_code
-            })
-
+        
         else:
             search = original
             return jsonify({

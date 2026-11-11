@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 52;
+        const HTML_VERSION = 53;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -1144,6 +1144,13 @@ const form = document.getElementById("commandForm");
 const input = document.getElementById("code");
 const result = document.getElementById("result");
 
+// #python session
+
+const pythonSessionId = (
+    window.crypto && window.crypto.randomUUID
+)
+    ? window.crypto.randomUUID()
+    : Date.now() + "-" + Math.random();
 
 
 /* #Max voice */
@@ -2172,6 +2179,7 @@ result.textContent = "";
     const enteredCode = input.value.trim().toLowerCase();
 
     const data = new FormData(form);
+    data.append("python_session", pythonSessionId);
 
 data.append(
     "unlocked",
