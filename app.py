@@ -1717,11 +1717,6 @@ def home():
                 "code": css_code,
                 "result": "CSS activated."
             })
-        elif code == "soliloque":
-            return jsonify({
-               "type":"result",
-               "text":"Well, it was bound to happen eventually. Its no-ones fault but please give my guitar to Audrey Taylor and my necklace I am wearing to Artemis black. this is my final will and testament. "
-            })
         else:
             search = original
             return jsonify({
