@@ -749,7 +749,15 @@ const termsOverlay = document.getElementById("termsOverlay");
 const acceptTermsButton = document.getElementById("acceptTerms");
 const rejectTermsButton = document.getElementById("rejectTerms");
 
+const TERMS_KEY = "master-lock-terms-accepted";
+
+// Check whether terms have already been accepted
+if (localStorage.getItem(TERMS_KEY) === "true") {
+    termsOverlay.style.display = "none";
+}
+
 acceptTermsButton.addEventListener("click", () => {
+    localStorage.setItem(TERMS_KEY, "true");
     termsOverlay.style.display = "none";
 });
 
