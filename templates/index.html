@@ -749,15 +749,34 @@ const termsOverlay = document.getElementById("termsOverlay");
 const acceptTermsButton = document.getElementById("acceptTerms");
 const rejectTermsButton = document.getElementById("rejectTerms");
 
-const TERMS_KEY = "master-lock-terms-accepted";
+const TERMS_RETURN_KEY = "master-lock-returning-from-link";
 
-// Check whether terms have already been accepted
-if (localStorage.getItem(TERMS_KEY) === "true") {
+// Check whether we have just returned from a link
+const returningFromLink =
+    sessionStorage.getItem(TERMS_RETURN_KEY) === "true";
+
+// Always consume the flag so it only works once
+sessionStorage.removeItem(TERMS_RETURN_KEY);
+
+// Hide the terms only when returning from a link
+if (returningFromLink) {
     termsOverlay.style.display = "none";
 }
 
+// Remember when an external link is clicked
+document.addEventListener("click", (event) => {
+    const link = event.target.closest("a[href]");
+
+    if (!link) return;
+
+    const destination = new URL(link.href, window.location.href);
+
+    if (destination.origin !== window.location.origin) {
+        sessionStorage.setItem(TERMS_RETURN_KEY, "true");
+    }
+});
+
 acceptTermsButton.addEventListener("click", () => {
-    localStorage.setItem(TERMS_KEY, "true");
     termsOverlay.style.display = "none";
 });
 
@@ -765,7 +784,6 @@ rejectTermsButton.addEventListener("click", () => {
     termsOverlay.style.display = "none";
     showLocked();
 });
-
 
 /* #drawing system */
 
