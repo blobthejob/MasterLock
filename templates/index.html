@@ -752,29 +752,22 @@ const rejectTermsButton = document.getElementById("rejectTerms");
 
 const TERMS_RETURN_KEY = "master-lock-returning-from-link";
 
-// Check whether we are returning from another tab
-if (sessionStorage.getItem(TERMS_RETURN_KEY) === "true") {
+// Hide terms if the app has just returned from a link
+if (localStorage.getItem(TERMS_RETURN_KEY) === "true") {
     termsOverlay.style.display = "none";
-    sessionStorage.removeItem(TERMS_RETURN_KEY);
+    localStorage.removeItem(TERMS_RETURN_KEY);
 }
 
-document.addEventListener("click", (event) => {
-    const link = event.target.closest("a[href]");
+// Clear the flag when returning to the existing app
+function clearTermsReturnFlag() {
+    localStorage.removeItem(TERMS_RETURN_KEY);
+}
 
-    if (!link) return;
+window.addEventListener("focus", clearTermsReturnFlag);
 
-    const destination = new URL(link.href, window.location.href);
-
-    if (destination.origin !== window.location.origin) {
-        localStorage.setItem(TERMS_RETURN_KEY, "true");
-    }
-});
-
-// Detect when the app becomes active again
-window.addEventListener("pageshow", () => {
-    if (localStorage.getItem(TERMS_RETURN_KEY) === "true") {
-        termsOverlay.style.display = "none";
-        localStorage.removeItem(TERMS_RETURN_KEY);
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+        clearTermsReturnFlag();
     }
 });
 
@@ -2269,9 +2262,15 @@ if (!response.ok) {
     }
 
     if (answer.type === "url") {
-        window.open(answer.url, "_blank");
-        return;
-    }
+
+        localStorage.setItem(
+        "master-lock-returning-from-link",
+        "true"
+    );
+
+    window.open(answer.url, "_blank");
+    return;
+}
 
     // #launch game
 
