@@ -744,6 +744,7 @@
 <script>
 
 
+
 /* #terms and conditions */
 
 const termsOverlay = document.getElementById("termsOverlay");
@@ -751,25 +752,36 @@ const acceptTermsButton = document.getElementById("acceptTerms");
 const rejectTermsButton = document.getElementById("rejectTerms");
 
 const TERMS_RETURN_KEY = "master-lock-returning-from-link";
+const TERMS_RETURN_TIME = 2 * 60 * 1000;
 
-// Hide terms if the app has just returned from a link
-if (localStorage.getItem(TERMS_RETURN_KEY) === "true") {
-    termsOverlay.style.display = "none";
+// Check whether we recently returned from an external link
+function checkTermsReturn() {
+    const savedTime = Number(localStorage.getItem(TERMS_RETURN_KEY));
+
+    if (!savedTime) return false;
+
+    const age = Date.now() - savedTime;
+
+    if (age >= 0 && age < TERMS_RETURN_TIME) {
+        termsOverlay.style.display = "none";
+        return true;
+    }
+
     localStorage.removeItem(TERMS_RETURN_KEY);
+    return false;
 }
 
-// Clear the flag when returning to the existing app
-function clearTermsReturnFlag() {
-    localStorage.removeItem(TERMS_RETURN_KEY);
-}
+// Check immediately when the app loads
+checkTermsReturn();
 
-window.addEventListener("focus", clearTermsReturnFlag);
-
+// Also handle returning to the app without a full reload
 document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
-        clearTermsReturnFlag();
+        checkTermsReturn();
     }
 });
+
+window.addEventListener("pageshow", checkTermsReturn);
 
 acceptTermsButton.addEventListener("click", () => {
     termsOverlay.style.display = "none";
@@ -779,6 +791,7 @@ rejectTermsButton.addEventListener("click", () => {
     termsOverlay.style.display = "none";
     showLocked();
 });
+
 
 /* #drawing system */
 
@@ -2265,7 +2278,7 @@ if (!response.ok) {
 
     localStorage.setItem(
         "master-lock-returning-from-link",
-        "true"
+        String(Date.now())
     );
 
     window.open(answer.url, "_blank");
