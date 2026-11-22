@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 60
+version = 62
 
 
 from email.message import EmailMessage
@@ -922,7 +922,6 @@ TYPO_TOLERANT_COMMANDS = [
     "swap",
     "binary",
     "youtube",
-    "startpage",
     "wiki",
     "bg",
     "text",
@@ -1191,7 +1190,7 @@ def home():
                 "text": random.choice(options)
             })
 
-        elif code.startswith("random "):
+        elif code.startswith("random ") or code === "random":
 
             numbers = re.fullmatch(
                 r"random\s+(-?\d+)\s+(?:to\s+)?(-?\d+)",
@@ -1768,8 +1767,15 @@ def home():
             [wiki _] to open Wikipedia
             [upper _] to change the text to UPPERCASE
             [lower _] to change the text to lowercase
+            [length _] to get the length of a string with spaces
+            [reverse _] to reverse the characters in a string
+            [words _] to get the words in a string
+            [chars _] to get the NON-space vharacters in a string
+            [title _] To Capitalize The First Letter Of Every Word
+            [swap _] to swap capitalization: Ab -> aB
             [binary _] to convert to/from UTF-8
-            [sort _] to sort a list of numbers or words
+            [random {1 5}] to get a random choice 1-5
+            [random choice {a b c}] to get a random choice a, b or c
             [bg {color}] to change the color of the background
             [text {color}] to change the color of the text
             [btn {color}] to change the color of the buttons
