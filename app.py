@@ -1190,7 +1190,7 @@ def home():
                 "text": random.choice(options)
             })
 
-        elif code.startswith("random ") or code === "random":
+        elif code.startswith("random ") or code == "random":
 
             numbers = re.fullmatch(
                 r"random\s+(-?\d+)\s+(?:to\s+)?(-?\d+)",
