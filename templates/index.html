@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 59;
+        const HTML_VERSION = 60;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -398,18 +398,6 @@
             canvasBg: "#1c1c1c"
         },
 
-        halloween: {
-            bg: "#120800", text: "#ff7518", accent: "#7b2fa8",
-            inputBg: "#1f0f00", inputText: "#ffb347", inputBorder: "#ff7518",
-            inputFocus: "#b266ff",
-            btnBg: "#2a1038", btnText: "#ff9a3c", btnBorder: "#ff7518",
-            btnHover: "#4b1d6b",
-            codeBg: "#2a1038", codeText: "#ffb347",
-            font: "Georgia, 'Times New Roman', serif",
-            glow: "#ff7518",
-            bgImage: "radial-gradient(circle at 50% 0%, #3a1450 0%, #120800 65%)"
-        },
-
         hacker: {
             bg: "#000000", text: "#00ff41", accent: "#008f11",
             inputBg: "#001a00", btnBg: "#002b00", btnHover: "#005c00",
@@ -426,7 +414,6 @@
             font: "'Courier New', Courier, monospace",
             glow: "#0041ff"
         },
-
 
         future: {
             bg: "#050816", text: "#7df9ff", accent: "#00e5ff",
@@ -3452,6 +3439,42 @@ function runCSS(code) {
     opacity: 1;
 }
 
+/* #header buttons: fixed identical size, icon shrinks to fit */
+#commandForm {
+    --header-btn-size: 56px;
+}
+
+#commandForm button {
+    width: var(--header-btn-size);
+    height: var(--header-btn-size);
+    min-width: var(--header-btn-size);
+    flex: 0 0 var(--header-btn-size);
+    box-sizing: border-box;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* the image is scaled to the button, not the other way round */
+#commandForm button .micIcon {
+    width: 60%;
+    height: 60%;
+    max-width: 60%;
+    max-height: 60%;
+    object-fit: contain;
+}
+
+@media (max-width: 600px) {
+    #commandForm {
+        --header-btn-size: 44px;
+    }
+
+    #commandForm button {
+        font-size: 14px !important;
+    }
+}
 </style>
 
 <!-- #custom css -->
