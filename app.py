@@ -909,6 +909,13 @@ def home():
 
         original = request.form["code"].strip()
 
+        
+        # #open direct website links
+        if original.lower().startswith(("https://", "http://")):
+            return jsonify({
+                "type": "url",
+                "url": original
+            })
         # #commands allowed to use typo correction
 
         TYPO_TOLERANT_COMMANDS = [
@@ -954,7 +961,8 @@ def home():
             "help",
             "style",
             "python",
-            "css"
+            "css",
+            "qr"
         ]
 
         code = re.sub(r"[^a-z0-9: ]", "", original.lower().replace("{","").replace("}",""))
@@ -1363,6 +1371,19 @@ def home():
                "type":"camera",
                "text":"Camera Active"
             })
+        
+        elif code.startswith("qr "):
+            text = original[3:].strip()
+
+            if not text:
+                return jsonify({
+                    "type": "result",
+                    "text": "Please provide text or a URL to turn into a QR code."
+                })
+            return jsonify({
+                "type": "qr",
+                "text": text
+            })
         elif code == "camera qr":
             return jsonify({
                "type":"camera qr",
@@ -1732,11 +1753,39 @@ def home():
                 "type": "ai",
                 "text": ask_ai(text)
             })
-        elif code == "help":
+        elif code == "help":        
             return jsonify({
-                "type":"result",
-                "text":"Use commands like: \n[about] for version and status \n[date] for system date and time \n[ai _] to ask the AI a query \n[translate _] to translate to a language \n[yt _] to open youtube \n[g _] to open google \n[wiki _] to open wikipedia \n[upper _] to change the text to UPPERCASE \n[lower _] to change the text to lowercase \n[binary _] to convert to/from UTF-8 \n[bg {color}] to change the color of the background \n[text {color}] to change the color of the text \n[btn {color}] to change the color of the buttons \n[mean {list,2,3,etc}] to get the mean of a sequence \n[median {list,2,3,etc}] to get the median of a sequence \n[mode {list,2,3,etc}] to get the mode of a sequence \n[range {list,2,3,etc}] to get the range of a sequence \n[sum {list,2,3,etc}] to get the sum of a sequence \n[nth {list,2,3,etc}] to get the nth term of a sequence \n[calc {a+-/*b}] to calculate a result of an equation \n[camera] to access the camera"
+                "type": "result",
+                "text": """Use commands like:
+            [about] for version and status
+            [date] for system date and time
+            [ai _] to ask the AI a query
+            [translate _] to translate to a language
+            [yt _] to open YouTube
+            [g _] to open Google
+            [wiki _] to open Wikipedia
+            [upper _] to change the text to UPPERCASE
+            [lower _] to change the text to lowercase
+            [binary _] to convert to/from UTF-8
+            [sort _] to sort a list of numbers or words
+            [bg {color}] to change the color of the background
+            [text {color}] to change the color of the text
+            [btn {color}] to change the color of the buttons
+            [style] to see the preset styles
+            [sort {list,2,3,etc}] to sort a sequence alphabetically
+            [mean {list,2,3,etc}] to get the mean of a sequence
+            [median {list,2,3,etc}] to get the median of a sequence
+            [mode {list,2,3,etc}] to get the mode of a sequence
+            [range {list,2,3,etc}] to get the range of a sequence
+            [sum {list,2,3,etc}] to get the sum of a sequence
+            [nth {list,2,3,etc}] to get the nth term of a sequence
+            [calc {a+-/*b}] to calculate a result of an equation
+            [camera] to access the camera
+            [photos] to access saved photos
+            [qr _] to generate a QR code from text or a URL
+            """
             })
+
         
         elif code == "style" or code.startswith("style "):
             return jsonify({
