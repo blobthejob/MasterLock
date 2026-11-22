@@ -2209,10 +2209,20 @@ if (
         return;
     }
 
-    if (cameraCommand === "photos") {
+if (cameraCommand === "photos") {
     input.value = "";
     result.textContent = "";
     await showPhotos();
+    return;
+}
+
+// #weather command
+
+const weatherMatch = submittedCommand.match(/^weather(?:\s+(.+))?$/i);
+
+if (weatherMatch) {
+    input.value = "";
+    await showWeather(weatherMatch[1]?.trim() || "");
     return;
 }
 
