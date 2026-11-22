@@ -1770,7 +1770,7 @@ def home():
             [length _] to get the length of a string with spaces
             [reverse _] to reverse the characters in a string
             [words _] to get the words in a string
-            [chars _] to get the NON-space vharacters in a string
+            [chars _] to get the NON-space characters in a string
             [title _] To Capitalize The First Letter Of Every Word
             [swap _] to swap capitalization: Ab -> aB
             [binary _] to convert to/from UTF-8
