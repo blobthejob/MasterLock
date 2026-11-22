@@ -1469,37 +1469,47 @@ def home():
                "text": text.swapcase()
             })
         
-        # binary command
+        
         elif code.startswith("binary "):
             text = original[7:].strip()
+
             # Binary to text
-            if text and all(
-                part in {"0","1"}
-                for part in text.replace("","")
-            ):
-                bits = text.split()
-                if all(len(part) == 8 for part in bits):
-                    try:
-                        decoded ="".join(
-                            chr(int(part, 2))
-                            for part in bits
-                        )
-                        return jsonify({
-                           "type":"result",
-                           "text": decoded
-                        })
-                    except Exception:
-                        pass
-                    
+            binary_text = text.replace(" ", "")
+
+            if binary_text and all(bit in "01" for bit in binary_text):
+                if len(binary_text) % 8 != 0:
+                    return jsonify({
+                        "type": "result",
+                        "text": "Invalid binary: the number of bits must be divisible by 8."
+                    })
+
+                try:
+                    decoded = bytes(
+                        int(binary_text[i:i+8], 2)
+                        for i in range(0, len(binary_text), 8)
+                    ).decode("utf-8")
+
+                    return jsonify({
+                        "type": "result",
+                        "text": decoded
+                    })
+                except (ValueError, UnicodeDecodeError):
+                    return jsonify({
+                        "type": "result",
+                        "text": "Invalid binary or unsupported text encoding."
+                    })
+
             # Text to binary
-            binary ="".join(
-                format(byte,"08b")
+            binary = "".join(
+                format(byte, "08b")
                 for byte in text.encode("utf-8")
             )
+
             return jsonify({
-               "type":"result",
-               "text": binary
+                "type": "result",
+                "text": binary
             })
+
         
         elif code.startswith("yt "):
             search = original[3:]
