@@ -2963,7 +2963,7 @@ function stopGame() {
 async function closeActiveTools() {
 
     // Close game
-    if (gameMenu.style.display !== "none") {
+    if (gameMenu && gameMenu.style.display !== "none") {
         stopGame();
     }
 
@@ -2973,12 +2973,15 @@ async function closeActiveTools() {
     }
 
     // Close camera and stop its stream
-    if (cameraMenu.style.display !== "none") {
+    if (cameraMenu && cameraMenu.style.display !== "none") {
         await stopCamera();
 
         cameraMode = "";
         cameraMenu.style.display = "none";
-        cameraStatus.textContent = "Camera closed.";
+
+        if (cameraStatus) {
+            cameraStatus.textContent = "Camera closed.";
+        }
     }
 
 }
