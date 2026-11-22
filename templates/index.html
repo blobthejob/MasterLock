@@ -3,7 +3,7 @@
 <head>
     <!-- #version -->
     <script>
-        const HTML_VERSION = 58;
+        const HTML_VERSION = 59;
         console.log("HTML Version: " + HTML_VERSION);
     </script>
     <title>Master Lock</title>
@@ -656,7 +656,8 @@
 
             <button type="submit">Go</button>
 
-            <button type="button" id="mic" title="Listen" aria-label="Listen"><span class="micIcon">&#x1F399;&#xFE0E;</span></button>
+            <button type="button" id="mic" title="Listen" aria-label="Listen"> <img class="micIcon" src="/static/icons/mic-off.png" alt="Listen" </button>
+
 
         </form>
 
@@ -2567,13 +2568,27 @@ const MIC_LABELS = {
     unavailable: "Microphone not available"
 };
 
+const MIC_IMAGES = {
+    idle: "/static/icons/mic-off.png",
+    listening: "/static/icons/mic-on.png",
+    unavailable: "/static/icons/mic-off.png"
+};
+
+const MIC_LABELS = {
+    idle: "Listen",
+    listening: "Listening - click to stop",
+    unavailable: "Microphone not available"
+};
+
 function setMic(state) {
-    const icon = document.createElement("span");
+    const icon = document.createElement("img");
 
     icon.className = "micIcon" +
         (state === "listening" ? " live" : "") +
         (state === "unavailable" ? " off" : "");
-    icon.textContent = MIC_ICONS[state];
+
+    icon.src = MIC_IMAGES[state];
+    icon.alt = MIC_LABELS[state];
 
     mic.replaceChildren(icon);
     mic.title = MIC_LABELS[state];
@@ -3252,11 +3267,14 @@ function runCSS(code) {
 }
 
 /* #monochrome mic icon */
+/* #custom mic icon */
+
 .micIcon {
-    font-variant-emoji: text;
-    display: inline-block;
-    font-size: 1.15em;
-    line-height: 1;
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    display: block;
+    filter: brightness(0) invert(1);
 }
 
 .micIcon.live {
@@ -3265,9 +3283,18 @@ function runCSS(code) {
 
 .micIcon.off {
     opacity: 0.45;
-    text-decoration: line-through;
 }
 
+@keyframes micPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .micIcon.live {
+        animation: none;
+    }
+}
 @keyframes micPulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.3; }
