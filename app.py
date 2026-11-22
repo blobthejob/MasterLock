@@ -1,6 +1,6 @@
 
 #<==========VERSION==========>
-version = 53
+version = 60
 
 
 from email.message import EmailMessage
@@ -1511,6 +1511,43 @@ def home():
             })
 
         
+        elif code.startswith("sort "):
+            text = original[5:].strip()
+
+            if not text:
+                return jsonify({
+                    "type": "result",
+                    "text": "Please provide a list to sort."
+                })
+
+            # Split the list using commas or spaces
+            items = [
+                item.strip()
+                for item in re.split(r"[,\s]+", text)
+                if item.strip()
+            ]
+
+            # Sort numbers numerically
+            try:
+                numbers = [float(item) for item in items]
+
+                numbers.sort()
+
+                result = ", ".join(
+                    str(int(n)) if n.is_integer() else str(n)
+                    for n in numbers
+                )
+
+            # Otherwise sort alphabetically
+            except ValueError:
+                items.sort(key=str.casefold)
+                result = ", ".join(items)
+
+            return jsonify({
+                "type": "result",
+                "text": result
+            })
+
         elif code.startswith("yt "):
             search = original[3:]
             return jsonify({
