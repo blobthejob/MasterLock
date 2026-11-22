@@ -662,7 +662,7 @@
 
 
         </form>
-
+        <div id="suggestion" style="display: none;"></div>
         <div id="result" class="result"></div>
 
 <!-- #games -->
@@ -2820,9 +2820,69 @@ if (finalTranscript.trim()) {
 
 }
 
+// #command suggestions
+const COMMAND_LIST = {{ commands|tojson }};
+const suggestionBox = document.getElementById("suggestion");
+let currentSuggestion = "";
+
+function updateSuggestion() {
+    const typed = input.value.toLowerCase();
+    currentSuggestion = "";
+
+    // Only suggest while typing a single line, from 2 characters up
+    if (typed.length >= 2 && !typed.includes("\n")) {
+        currentSuggestion = COMMAND_LIST.find(
+            command => command.startsWith(typed) && command !== typed
+        ) || "";
+    }
+
+    if (currentSuggestion) {
+        suggestionBox.innerHTML =
+            "<b>" + currentSuggestion + "</b> &nbsp;(Tab to complete)";
+        suggestionBox.style.display = "block";
+    } else {
+        suggestionBox.style.display = "none";
+    }
+}
+
+function acceptSuggestion() {
+    if (!currentSuggestion) return false;
+
+    input.value = currentSuggestion + " ";
+    input.selectionStart = input.selectionEnd = input.value.length;
+    input.focus();
+    updateSuggestion();
+    return true;
+}
+
+input.addEventListener("input", updateSuggestion);
+input.addEventListener("keyup", updateSuggestion);   // also covers history arrows and clearing
+
+// mousedown (not click) so the textarea keeps focus; works for tapping on mobile too
+suggestionBox.addEventListener("mousedown", event => {
+    event.preventDefault();
+    acceptSuggestion();
+});
+suggestionBox.addEventListener("touchstart", event => {
+    event.preventDefault();
+    acceptSuggestion();
+}, { passive: false });
+
 // #keyboard shortcuts
 
 input.addEventListener("keydown", event => {
+
+       // #accept command suggestion (Right Arrow only at the end of the text)
+    if (
+        currentSuggestion &&
+        (event.key === "Tab" ||
+            (event.key === "ArrowRight" &&
+                input.selectionStart === input.value.length))
+    ) {
+        event.preventDefault();
+        acceptSuggestion();
+        return;
+    }
 
     if (event.key === "Tab") {
         event.preventDefault();
@@ -3372,6 +3432,24 @@ function runCSS(code) {
     background: #003300;
     border-color: #005500;
     text: #000000!important;
+}
+
+/* #command suggestion */
+#suggestion {
+    padding: 4px 14px;
+    font-size: 18px;
+    opacity: 0.6;
+    cursor: pointer;
+    user-select: none;
+    color: inherit;
+}
+
+#suggestion b {
+    opacity: 1;
+}
+
+#suggestion:hover {
+    opacity: 1;
 }
 
 </style>

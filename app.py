@@ -899,6 +899,56 @@ CODES = {
 }
 START_UNLOCKED = ["nos ossos que aqui estamos pelos vossos esperamos"]
 
+# #commands allowed to use typo correction
+
+TYPO_TOLERANT_COMMANDS = [
+    "hello",
+    "hi",
+    "hey",
+    "who am i",
+    "date",
+    "about",
+    "cipher",
+    "encrypt",
+    "decrypt",
+    "upper",
+    "lower",
+    "length",
+    "reverse",
+    "words",
+    "chars",
+    "trim",
+    "title",
+    "swap",
+    "binary",
+    "youtube",
+    "startpage",
+    "wiki",
+    "bg",
+    "text",
+    "btn",
+    "input",
+    "yt",
+    "calc",
+    "random",
+    "translate",
+    "mean",
+    "median",
+    "mode",
+    "range",
+    "sum",
+    "count",
+    "nth",
+    "nthterm",
+    "max",
+    "help",
+    "style",
+    "python",
+    "css",
+    "qr",
+    "weather"
+]
+
 @app.route("/", methods=["GET","POST"])
 def home():
 
@@ -916,54 +966,6 @@ def home():
                 "type": "url",
                 "url": original
             })
-        # #commands allowed to use typo correction
-
-        TYPO_TOLERANT_COMMANDS = [
-            "hello",
-            "hi",
-            "hey",
-            "who am i",
-            "date",
-            "about",
-            "cipher",
-            "encrypt",
-            "decrypt",
-            "upper",
-            "lower",
-            "length",
-            "reverse",
-            "words",
-            "chars",
-            "trim",
-            "title",
-            "swap",
-            "binary",
-            "youtube",
-            "startpage",
-            "wiki",
-            "bg",
-            "text",
-            "btn",
-            "input",
-            "yt",
-            "calc",
-            "random",
-            "translate",
-            "mean",
-            "median",
-            "mode",
-            "range",
-            "sum",
-            "count",
-            "nth",
-            "nthterm",
-            "max",
-            "help",
-            "style",
-            "python",
-            "css",
-            "qr"
-        ]
 
         code = re.sub(r"[^a-z0-9: ]", "", original.lower().replace("{","").replace("}",""))
         compact_commands = [
@@ -1820,7 +1822,7 @@ def home():
                "url":"https://www.google.com/search?q=" + quote(search)
             })
 
-    return render_template("index.html")
+    return render_template("index.html", commands=TYPO_TOLERANT_COMMANDS)
 
 
 if __name__ == "__main__":
